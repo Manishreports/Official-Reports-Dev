@@ -1,0 +1,15 @@
+const SC=['Plant','Storage Location','Material','Material Description','Unrestricted','Transit and Transfer','Batch'];
+const PC=['SPlt','Plant','Plant Name','Location','Material No.','Description','STO Qty','STO Number','STO Date','Issue Qty','Issue_Date'];
+const CC=['SPlt','Plant','Plant Name','Location','Material No.','Description','STO Qty','STO Number'];
+let stock=[],plan=[],manual=[],remarks=[],cats=[],mblocks=[],raipur=[],mpending=[],bsto=[],core=[],planning=[];
+let allowedLocations=['MAIN','AMBL','DEHR','ROUP'];
+let totalStockRows=[],totalStockHeaders=[],spltPlanMap={};
+let setup=[{Order:1,Remarks:'Bakal',Show:'Yes',PlanSource:'Planning Database',Previous:''},{Order:2,Remarks:'DOFL',Show:'Yes',PlanSource:'Previous Negative Pending',Previous:'Bakal Pending'},{Order:3,Remarks:'9916',Show:'Yes',PlanSource:'Previous Negative Pending',Previous:'DOFL Pending'},{Order:4,Remarks:'Bakal Ecom',Show:'Yes',PlanSource:'Previous Negative Pending',Previous:'9916 Pending'},{Order:5,Remarks:'Tolagaon',Show:'Yes',PlanSource:'Planning Database',Previous:''},{Order:6,Remarks:'9918',Show:'Yes',PlanSource:'Previous Negative Pending',Previous:'Tolagaon Pending'},{Order:7,Remarks:'9919',Show:'Yes',PlanSource:'Previous Negative Pending',Previous:'9918 Pending'},{Order:8,Remarks:'Tolagaon Ecom',Show:'Yes',PlanSource:'Previous Negative Pending',Previous:'9919 Pending'}];
+let ph=[],pr=[],mh=[],mr=[],sh=[],sr=[],fh=[],fr=[];
+const $=x=>document.getElementById(x);
+const N=v=>v==null?'':String(v).replace(/\u00a0/g,' ').trim().replace(/\s+/g,' ');
+const NK=v=>N(v).toLowerCase();
+const Q=v=>{if(typeof v==='number')return Number.isFinite(v)?v:0;let t=N(v);if(!t||t==='-'||t==='--')return 0;let neg=false;if(t.startsWith('(')&&t.endsWith(')')){neg=true;t=t.slice(1,-1)}if(t.endsWith('-')){neg=true;t=t.slice(0,-1)}t=t.replace(/,/g,'').replace(/\s/g,'').replace(/[₹$€£]/g,'').replace(/[^0-9.+-]/g,'');let n=Number(t);if(!Number.isFinite(n))return 0;return neg?-Math.abs(n):n};
+const canonicalRemark=v=>{let t=N(v),k=NK(t),m={'bakal':'Bakal','dofl':'DOFL','9916':'9916','bakal ecom':'Bakal Ecom','tolagaon':'Tolagaon','9918':'9918','9919':'9919','tolagaon ecom':'Tolagaon Ecom','delete':'delete'};return m[k]||t};
+const RK=v=>NK(canonicalRemark(v));
+const K=r=>NK(r.Plant)+'||'+NK(r['Storage Location']);

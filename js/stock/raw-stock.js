@@ -1,9 +1,69 @@
-$('stockBtn').onclick=()=>$('stockFile').click();$('planBtn').onclick=()=>$('planFile').click();
-$('stockFile').onchange=e=>read(e.target.files[0],'s');$('planFile').onchange=e=>read(e.target.files[0],'p');
-function normalizeHeader(v){return NK(v).replace(/[^a-z0-9]/g,'')}
-function read(f,type){if(!f)return;let px=type==='s'?'sp':'pp';prog(px,5,'Reading...',0,0);let R=new FileReader();R.onload=e=>{try{let wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws,{defval:''}),cols=type==='s'?SC:PC,out=rows.map(r=>{let o={};cols.forEach(c=>o[c]='');Object.keys(r).forEach(k=>{let z=cols.find(c=>normalizeHeader(c)===normalizeHeader(k));if(z)o[z]=r[k]});return o});if(type==='s'){stock=out;sync(false);drawStockPreview();log(out.length+' stock rows loaded')}else{plan=out;drawPlanPreview();log(out.length+' plan rows loaded')}prog(px,100,'Upload complete',out.length,out.length);refresh();save()}catch(x){console.error(x);toast('File read nahi hui')}};R.readAsArrayBuffer(f)}
-$('clearStock').onclick=()=>{stock=[];drawStockPreview();refresh();toast('Raw cleared')};
-function drawPrev(id,cols,rows,limit=5){let t=$(id),h=t.querySelector('thead'),b=t.querySelector('tbody');h.innerHTML='';b.innerHTML='';let tr=document.createElement('tr');cols.forEach(c=>{let th=document.createElement('th');th.textContent=c;tr.appendChild(th)});h.appendChild(tr);rows.slice(0,limit).forEach(r=>{let x=document.createElement('tr');cols.forEach(c=>{let d=document.createElement('td');d.textContent=r[c]??'';x.appendChild(d)});b.appendChild(x)})}
+$('stockBtn').onclick=()=>$('stockFile').click();
+$('planBtn').onclick=()=>$('planFile').click();
+$('stockFile').onchange=e=>readMappedFile(e.target.files[0],'s');
+$('planFile').onchange=e=>readMappedFile(e.target.files[0],'p');
+
+async function readMappedFile(file,type){
+  if(!file)return;
+  const prefix=type==='s'?'sp':'pp';
+  const columns=type==='s'?SC:PC;
+  const profile=type==='s'?'raw-stock':'plan-file';
+  prog(prefix,5,'Reading workbook...',0,0);
+
+  try{
+    const result=await ExcelImport.importMapped(
+      file,
+      profile,
+      columns,
+      progress=>prog(prefix,progress,'Reading workbook...',0,0)
+    );
+
+    if(type==='s'){
+      stock=result.rows;
+      sync(false);
+      drawStockPreview();
+      log(`${result.rows.length} stock rows loaded from ${result.sheetName}`);
+    }else{
+      plan=result.rows;
+      drawPlanPreview();
+      log(`${result.rows.length} plan rows loaded from ${result.sheetName}`);
+    }
+
+    prog(prefix,100,`Loaded: ${result.sheetName}`,result.rows.length,result.rows.length);
+    refresh();
+    save();
+  }catch(error){
+    if(error.message!=='Upload cancelled'){
+      console.error(error);
+      toast(error.message||'File read nahi hui');
+    }
+    prog(prefix,0,'Waiting...',0,0);
+  }finally{
+    if(type==='s')$('stockFile').value='';
+    else $('planFile').value='';
+  }
+}
+
+$('clearStock').onclick=()=>{
+  stock=[];
+  drawStockPreview();
+  refresh();
+  toast('Raw cleared');
+};
+
+function drawPrev(id,cols,rows,limit=5){
+  const table=$(id),thead=table.querySelector('thead'),tbody=table.querySelector('tbody');
+  thead.innerHTML='';tbody.innerHTML='';
+  const headerRow=document.createElement('tr');
+  cols.forEach(column=>{const th=document.createElement('th');th.textContent=column;headerRow.appendChild(th)});
+  thead.appendChild(headerRow);
+  rows.slice(0,limit).forEach(row=>{
+    const tr=document.createElement('tr');
+    cols.forEach(column=>{const td=document.createElement('td');const value=row[column]??'';td.textContent=typeof value==='number'?value.toLocaleString('en-IN'):value;tr.appendChild(td)});
+    tbody.appendChild(tr);
+  });
+}
 function drawStockPreview(){drawPrev('stockTable',SC,stock,limitValue('stockPreviewLimit'))}
 function drawPlanPreview(){drawPrev('planTable',PC,plan,limitValue('planPreviewLimit'))}
-$('stockPreviewLimit').onchange=drawStockPreview;$('planPreviewLimit').onchange=drawPlanPreview;
+$('stockPreviewLimit').onchange=drawStockPreview;
+$('planPreviewLimit').onchange=drawPlanPreview;

@@ -1,6 +1,10 @@
 # Changelog
 
-## V8 Modular Base
-- Split V7 single-file code into feature-specific files.
-- Kept current V7 behavior and UI.
-- Added GitHub-ready folder structure and documentation.
+## Dev 2.0
+- Mandatory sheet selector for Stock, Plan and Total Stock uploads.
+- Temporary/permanent column mapping for Stock and Plan.
+- Scroll-to-top button.
+- Indian number display.
+- Styled Excel borders, widths, heights and highlights.
+- Auto-filter removed from exported Excel.
+- Existing calculations unchanged.

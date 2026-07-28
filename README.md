@@ -1,34 +1,18 @@
-# Official Reports
+# Official Reports Dev — Test Release 2.0
 
-Team-ready browser reporting application by **Manish Pandey**.
+This development build keeps production calculations unchanged and adds only foundation/UI/import improvements.
 
-## GitHub Pages setup
+## New in this test build
 
-1. Create a new public repository named `Official-Reports`.
-2. Upload **the contents of this folder** to the repository root.
-3. Open **Settings → Pages**.
-4. Choose **Deploy from a branch**.
-5. Select `main` and `/(root)`, then Save.
+- Excel sheet selection is mandatory on every upload.
+- Column mapping appears when required headings do not match.
+- Mapping can be temporary or permanently remembered by the user.
+- Scroll-to-top floating button.
+- Indian comma display in previews and reports.
+- Styled Excel export with green headings, thin borders, Indian comma number style, adjusted widths and estimated row heights.
+- Excel auto-filter removed.
+- Total Stock upload still remains preview-only; business logic will be developed next.
 
-The live URL will be:
+## Deployment
 
-`https://manishreports.github.io/Official-Reports/`
-
-## Included modules
-
-- System Overview
-- Reports Dashboard placeholder
-- Core Pending with Allowed Locations
-- HO Stock reporting
-- Total Stock Working placeholder
-- Planning Database
-- Excel report download
-- Default preview size: 5 rows
-- Manish Pandey branding and watermark
-
-## Important
-
-- Upload the extracted files and folders, not the ZIP itself.
-- Raw input files are not retained after browser refresh.
-- Helper/master data is stored in browser local storage under a new clean key.
-- Internet is required for the Excel library loaded from CDN.
+Upload all extracted files to `Official-Reports-Dev`, enable GitHub Pages from `main / root`, then hard refresh.

@@ -1,26 +1,26 @@
-# Official Reports Dev - UI Module 2.5
+# Official Reports Dev UI Module 2.6
 
-## Replace these files
+Replace these files in `Official-Reports-Dev`:
 
 - `index.html`
 - `css/theme.css`
 - `js/ui/navigation.js`
+- `js/ui/table-layout.js` (new file)
 - `js/total-stock/total-stock.js`
 - `js/total-stock/supply-module.js`
 
-## Changes
+## Fixed in 2.6
 
-- All table headings and data are center aligned.
-- Table rows stay compact and fixed-height; long text does not increase row height.
-- Long text and extra columns are available through left-right horizontal scrolling.
-- Manual Material Add matches the compact Core Pending table style.
-- Delete/Action buttons no longer increase row height.
-- Sidebar now shows only section headings by default; click or hover reveals options.
-- Only one clicked sidebar section remains expanded.
-- Supply Report is a separate top-level sidebar section, outside Total Stock Working.
-- Separate Supply section order: Allowed Supply Locations, Supply Report, Supply Upload.
-- Total Stock Upload button binding is repaired and made defensive.
+- Sidebar is a real accordion: initially only WORKSPACE, CORE PENDING, HO STOCK, TOTAL STOCK WORKING and SUPPLY REPORT headings are visible.
+- Existing accordion groups are no longer destroyed when Supply navigation is inserted.
+- SUPPLY REPORT is outside TOTAL STOCK WORKING and contains:
+  - Allowed Supply Locations
+  - Supply Report
+  - Supply Upload
+- Manual Material Add no longer stretches Plant, Storage Location and Material columns across the page.
+- Editable table inputs resize from their actual value/header length.
+- Rows stay compact; long values and extra columns use horizontal scrolling instead of increasing row height.
+- All headings and cell data remain center aligned.
+- Total Stock Upload fix from 2.5 is retained.
 
-## After upload
-
-Commit the files, wait for GitHub Pages deployment, then press `Ctrl + Shift + R`.
+After commit and GitHub Pages deployment, perform a hard refresh (`Ctrl + Shift + R`).

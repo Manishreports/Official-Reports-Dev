@@ -25,3 +25,23 @@
 #manTable th:last-child,#manTable td:last-child{min-width:90px;width:90px}
 
 @media(max-width:850px){.nav-section-items{display:none}.nav-section.open>.nav-section-items,.nav-section:hover>.nav-section-items{display:block}}
+
+/* ===== UI MODULE 2.6: TRUE CONTENT WIDTH + STABLE ACCORDION ===== */
+.side > .nav-section{margin:7px 0}
+.side > .nav-section > .nav-section-items{display:none}
+.side > .nav-section.open > .nav-section-items,
+.side > .nav-section:hover > .nav-section-items{display:block}
+
+/* Tables stay compact. Width is determined by actual content; the wrapper scrolls when needed. */
+.tablewrap table{width:max-content;min-width:0;table-layout:auto}
+.tablewrap th,.tablewrap td{width:auto;min-width:0;max-width:none;white-space:nowrap!important}
+.tablewrap input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.tablewrap select{width:auto;min-width:6ch;max-width:64ch;box-sizing:content-box}
+
+/* Manual Material: no forced full-screen columns and no artificial blank space. */
+#manTable{width:max-content!important;min-width:0!important}
+#manTable th,#manTable td{min-width:0!important;width:auto!important;max-width:none!important}
+#manTable td input{width:auto;min-width:6ch;max-width:64ch}
+#manTable th:nth-child(4),#manTable td:nth-child(4),
+#manTable td:nth-child(4) input{min-width:0!important;width:auto!important;max-width:64ch!important}
+#manTable th:last-child,#manTable td:last-child{min-width:0!important;width:auto!important}

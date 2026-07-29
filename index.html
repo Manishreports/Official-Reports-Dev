@@ -39,7 +39,8 @@
 
     <div class="label">TOTAL STOCK WORKING</div>
     <button class="nav" data-p="total-stock">Total Stock Upload</button>
-    <button class="nav" data-p="total-stock-preview">Total Stock Preview</button>
+    <button class="nav" data-p="plan-ho">Plan & HO</button>
+    <button class="nav" data-p="plan-supply">Plan & Supply</button>
   </aside>
 
   <main class="main">
@@ -59,6 +60,7 @@
         <div class="metric"><span>Blocked STO</span><strong id="dBlock">0</strong></div>
       </div>
       <div class="panel"><div class="head"><h3>Status & Activity</h3><span id="stockStatus" class="pill">Ready</span></div><div id="log" class="activity"><div>Tool started.</div></div></div>
+      <div class="panel"><div class="head"><div><h3>Core Pending SPlt Summary</h3><p>Har SPlt ki total pending quantity.</p></div></div><div id="coreSpltOverviewSummary" class="dynamic-metrics"></div></div>
     </section>
 
     <section id="reports-dashboard" class="page">
@@ -83,7 +85,7 @@
 
     <section id="core" class="page">
       <div id="coreSummary" class="dynamic-metrics"></div>
-      <div class="panel"><div class="head"><h3>Core Pending Report</h3><div class="table-controls">Show <select id="coreLimit" class="limit-select"><option>5</option><option>10</option><option>50</option></select></div></div><div class="toolbar"><button id="buildCore" class="btn primary">Build Core Pending</button><button id="sendPlan" class="btn success">Send Data to Plan</button></div><div id="coreInfo" class="notice">Report not built.</div><div class="tablewrap compact"><table id="coreTable"><thead></thead><tbody></tbody></table></div></div>
+      <div class="panel"><div class="head"><h3>Core Pending Report</h3><div class="table-controls">Show <select id="coreLimit" class="limit-select"><option>5</option><option>10</option><option>50</option></select></div></div><div class="toolbar"><button id="buildCore" class="btn primary">Build Core Pending</button><button id="downloadCore" class="btn secondary">Download Excel</button><button id="sendPlan" class="btn success">Send Data to Plan</button></div><div id="coreInfo" class="notice">Report not built.</div><div class="tablewrap compact"><table id="coreTable"><thead></thead><tbody></tbody></table></div></div>
     </section>
 
     <section id="stock" class="page">
@@ -111,9 +113,28 @@
       <div id="finr" class="tabp"><div class="report-control">Show <select id="finalLimit" class="limit-select"><option>5</option><option>10</option><option>50</option></select></div><div class="tablewrap compact"><table id="finTable"><thead></thead><tbody></tbody></table></div></div>
     </div></section>
 
-    <section id="total-stock" class="page"><div class="metrics"><div class="metric"><span>Total Stock Rows</span><strong id="totalStockCount">0</strong></div><div class="metric"><span>Columns</span><strong id="totalStockColumns">0</strong></div></div><div class="panel"><div class="head"><div><h3>Total Stock Upload</h3><p>Abhi sirf data pull hoga. Logic baad me add hoga.</p></div></div><div class="drop"><input id="totalStockFile" type="file" accept=".xlsx,.xls,.csv" hidden><button id="totalStockBtn" class="btn primary">Choose Total Stock File</button></div><div id="totalStockInfo" class="notice">No file uploaded.</div></div></section>
+    <section id="total-stock" class="page">
+      <div class="metrics">
+        <div class="metric"><span>Total Stock Rows</span><strong id="totalStockCount">0</strong></div>
+        <div class="metric"><span>Duplicate Keys</span><strong id="totalStockDuplicateCount">0</strong></div>
+        <div class="metric"><span>Plan Source</span><strong id="totalStockPlanStatus">Not Built</strong></div>
+        <div class="metric"><span>HO Pending</span><strong id="totalStockPendingStatus">Not Ready</strong></div>
+      </div>
+      <div class="panel">
+        <div class="head"><div><h3>Total Stock Upload</h3><p>Unique key: Plant + Location + Material No.</p></div></div>
+        <div class="drop"><input id="totalStockFile" type="file" accept=".xlsx,.xls,.csv" hidden><button id="totalStockBtn" class="btn primary">Choose Total Stock File</button></div>
+        <div class="toolbar total-stock-actions"><button id="buildPlanHo" class="btn primary">Build Plan & HO</button><button id="downloadPlanHo" class="btn success">Download Plan & HO</button></div>
+        <div id="totalStockInfo" class="notice">No file uploaded.</div>
+      </div>
+      <div class="panel"><div class="head"><h3>Total Stock Source Preview</h3><div class="table-controls">Show <select id="totalStockLimit" class="limit-select"><option>5</option><option>10</option><option>50</option></select></div></div><div class="tablewrap compact"><table id="totalStockTable"><thead></thead><tbody></tbody></table></div></div>
+    </section>
 
-    <section id="total-stock-preview" class="page"><div class="panel"><div class="head"><h3>Total Stock Preview</h3><div class="table-controls">Show <select id="totalStockLimit" class="limit-select"><option>5</option><option>10</option><option>50</option></select></div></div><div class="tablewrap compact"><table id="totalStockTable"><thead></thead><tbody></tbody></table></div></div></section>
+    <section id="plan-ho" class="page">
+      <div id="planHoSummary" class="dynamic-metrics"></div>
+      <div class="panel"><div class="head"><div><h3>Plan & HO</h3><p>Plan source available na ho to Plan column automatically hidden rahega.</p></div><div class="table-controls">Show <select id="planHoLimit" class="limit-select"><option>5</option><option>10</option><option>50</option></select></div></div><div id="planHoInfo" class="notice">Report not built.</div><div class="tablewrap compact"><table id="planHoTable"><thead></thead><tbody></tbody></table></div></div>
+    </section>
+
+    <section id="plan-supply" class="page"><div class="panel empty-state"><h3>Plan & Supply</h3><p>Supply Upload processing module ready hone ke baad yeh report activate hogi.</p></div></section>
   </main>
 </div>
 
@@ -121,11 +142,11 @@
 
 <div id="modal" class="modal hidden"><div class="mcard"><div class="mhead"><h3 id="mTitle">Input Required</h3><button id="mX" class="btn secondary">×</button></div><div id="mBody"></div><div class="mactions"><button id="mCancel" class="btn secondary">Cancel</button><button id="mSave" class="btn primary">Save</button></div></div></div><div id="toast" class="toast hidden"></div>
 
-<script src="js/core/state.js?v=2.0.0"></script>
-<script src="js/core/excel-import.js?v=2.0.0"></script>
+<script src="js/core/state.js?v=2.1.0"></script>
+<script src="js/core/excel-import.js?v=2.1.0"></script>
 <script src="js/ui/navigation.js?v=2.0.0"></script>
 <script src="js/ui/scroll-top.js?v=2.0.0"></script>
-<script src="js/ui/table-pagination.js?v=1.0.0"></script>
+<script src="js/ui/table-pagination.js?v=2.2.0"></script>
 <script src="js/stock/raw-stock.js?v=2.0.0"></script>
 <script src="js/stock/remarks.js?v=1.0.0"></script>
 <script src="js/stock/category.js?v=1.0.0"></script>
@@ -137,14 +158,14 @@
 <script src="js/pending/raipur.js?v=1.0.0"></script>
 <script src="js/pending/manual-pending.js?v=1.0.0"></script>
 <script src="js/pending/block-sto.js?v=1.0.0"></script>
-<script src="js/pending/core-pending.js?v=1.0.0"></script>
-<script src="js/total-stock/total-stock.js?v=2.0.0"></script>
+<script src="js/pending/core-pending.js?v=2.2.0"></script>
+<script src="js/total-stock/total-stock.js?v=2.1.0"></script>
 <script src="js/reports/report-controller.js?v=2.0.0"></script>
 <script src="js/reports/pivot-report.js?v=1.0.0"></script>
 <script src="js/reports/main-report.js?v=1.0.0"></script>
 <script src="js/reports/signature-report.js?v=1.0.0"></script>
 <script src="js/reports/final-report.js?v=1.0.0"></script>
 <script src="js/reports/report-renderer.js?v=2.0.0"></script>
-<script src="js/core/app.js?v=2.0.0"></script>
+<script src="js/core/app.js?v=2.2.0"></script>
 </body>
 </html>

@@ -14,12 +14,23 @@ const PLAN_HO_PENDING_COLUMNS=[
 ];
 const TS_NUMBER_COLUMNS=new Set(['Stock (ps)','Transit(Ps)','Plan','T.Stock (Ps)','Avg Sale','HO.Blc Qty','Forecast Pend.',...PLAN_HO_PENDING_COLUMNS.map(x=>x[0])]);
 
-$('totalStockBtn').onclick=()=>$('totalStockFile').click();
-$('totalStockFile').onchange=uploadTotalStockFile;
-$('totalStockLimit').onchange=drawTotalStock;
-$('planHoLimit').onchange=drawPlanHo;
-$('buildPlanHo').onclick=buildPlanHoReport;
-$('downloadPlanHo').onclick=downloadPlanHoReport;
+function bindTotalStockControls(){
+  const uploadButton=$('totalStockBtn');
+  const fileInput=$('totalStockFile');
+  if(uploadButton&&fileInput&&uploadButton.dataset.bound!=='1'){
+    uploadButton.dataset.bound='1';
+    uploadButton.addEventListener('click',event=>{
+      event.preventDefault();
+      fileInput.click();
+    });
+    fileInput.addEventListener('change',uploadTotalStockFile);
+  }
+  if($('totalStockLimit'))$('totalStockLimit').onchange=drawTotalStock;
+  if($('planHoLimit'))$('planHoLimit').onchange=drawPlanHo;
+  if($('buildPlanHo'))$('buildPlanHo').onclick=buildPlanHoReport;
+  if($('downloadPlanHo'))$('downloadPlanHo').onclick=downloadPlanHoReport;
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bindTotalStockControls,{once:true});else bindTotalStockControls();
 
 function totalStockKey(row){return `${NK(row.Plant)}||${NK(row.Location)}||${NK(row['Material No.'])}`}
 function formatIndian(value){return Q(value).toLocaleString('en-IN',{maximumFractionDigits:2})}

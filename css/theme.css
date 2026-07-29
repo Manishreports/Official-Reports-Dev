@@ -3,3 +3,25 @@
 .modal-help{margin:4px 0 14px;color:#5f6b7d}.sheet-choice-list{display:grid;gap:10px}.sheet-choice{display:flex;gap:12px;align-items:flex-start;padding:13px;border:1px solid #dbe3ee;border-radius:12px;cursor:pointer;background:#fbfcfe}.sheet-choice:hover{border-color:#5b8def;background:#f3f7ff}.sheet-choice input{width:auto;margin-top:5px}.sheet-choice-body{display:grid;gap:3px}.sheet-choice-body strong{font-size:15px}.sheet-choice-body small{color:#2563eb;font-weight:700}.sheet-choice-body em{font-style:normal;color:#7a8495;font-size:12px}.mapping-grid{display:grid;gap:9px}.mapping-row{display:grid;grid-template-columns:minmax(180px,.8fr) 1.2fr;gap:12px;align-items:center;padding:9px 10px;border-radius:10px;background:#f8fafc}.mapping-row label{font-weight:800}.mapping-missing{border-left:4px solid #f59e0b;background:#fff8e8}.remember-mapping{display:flex;align-items:center;gap:9px;margin-top:16px;padding:11px;background:#eef6ff;border-radius:10px;font-weight:700}.remember-mapping input{width:auto}.compact td,.compact th{padding:5px 7px;line-height:1.1}@media(max-width:700px){.mapping-row{grid-template-columns:1fr}.scroll-top{right:16px;bottom:16px}}
 
 .total-stock-actions{margin-top:12px}.modal-data-table{width:100%;min-width:0;margin-top:10px;border-collapse:collapse}.modal-data-table th,.modal-data-table td{position:static;padding:7px;border:1px solid #dbe3ee}.modal-data-table th{background:#991b1b;color:#fff}.notice.error{background:#fee2e2;color:#991b1b}
+
+/* ===== UI MODULE 2.5: COMPACT TABLES + ACCORDION SIDEBAR ===== */
+.nav-section{margin:7px 0;position:relative}
+.nav-section-title{width:100%;border:0;background:transparent;color:#8ea2cf;display:flex;align-items:center;justify-content:space-between;padding:11px 10px;border-radius:10px;font-size:11px;letter-spacing:.12em;font-weight:900;cursor:pointer;text-align:left}
+.nav-section-title:hover,.nav-section.open>.nav-section-title{background:#ffffff12;color:#fff}
+.nav-chevron{font-size:20px;line-height:1;transition:transform .18s ease}
+.nav-section.open>.nav-section-title .nav-chevron{transform:rotate(90deg)}
+.nav-section-items{display:none;padding:2px 0 4px}
+.nav-section.open>.nav-section-items,.nav-section:hover>.nav-section-items{display:block}
+.nav-section-items .nav{padding:9px 13px;margin:2px 0}
+
+.tablewrap{width:100%;max-width:100%;overflow-x:auto;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.tablewrap table{width:max-content;min-width:100%;table-layout:auto}
+.tablewrap th,.tablewrap td{height:36px;min-height:36px;max-height:36px;padding:6px 10px;text-align:center!important;vertical-align:middle!important;white-space:nowrap!important;word-break:normal!important;overflow:hidden;text-overflow:ellipsis;max-width:none;line-height:1.15}
+.tablewrap th{position:sticky;top:0;z-index:3}
+.tablewrap input,.tablewrap select{height:28px;min-height:28px;padding:3px 7px;text-align:center;white-space:nowrap}
+.tablewrap .btn,.tablewrap button{min-height:27px;height:27px;padding:3px 10px;line-height:1;margin:0;white-space:nowrap}
+#manTable th:nth-child(4),#manTable td:nth-child(4){min-width:440px;width:auto;max-width:none}
+#manTable td:nth-child(4) input{min-width:420px;width:100%}
+#manTable th:last-child,#manTable td:last-child{min-width:90px;width:90px}
+
+@media(max-width:850px){.nav-section-items{display:none}.nav-section.open>.nav-section-items,.nav-section:hover>.nav-section-items{display:block}}

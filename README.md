@@ -1,13 +1,26 @@
-# Official Reports Dev 2.1 - Total Stock Module
+# Official Reports Dev - UI Module 2.5
 
-This development build adds the **Plan & HO** Total Stock Working module. Existing Core Pending and HO Stock calculations are unchanged.
+## Replace these files
 
-## Current Total Stock scope
-- Upload Total Stock workbook with sheet selection and column mapping
-- Preserve source Description red/yellow colors in preview and Excel
-- Reject duplicate Plant + Location + Material No. keys
-- Plan from Core Pending by Plant + Location + Material No.
-- Main Sheet pending columns are mandatory
-- Plan column hides when Core Pending report has not been built
-- Forecast Pending hides when Forecast heading is absent
-- Plan & Supply remains disabled until Supply Upload processing is designed
+- `index.html`
+- `css/theme.css`
+- `js/ui/navigation.js`
+- `js/total-stock/total-stock.js`
+- `js/total-stock/supply-module.js`
+
+## Changes
+
+- All table headings and data are center aligned.
+- Table rows stay compact and fixed-height; long text does not increase row height.
+- Long text and extra columns are available through left-right horizontal scrolling.
+- Manual Material Add matches the compact Core Pending table style.
+- Delete/Action buttons no longer increase row height.
+- Sidebar now shows only section headings by default; click or hover reveals options.
+- Only one clicked sidebar section remains expanded.
+- Supply Report is a separate top-level sidebar section, outside Total Stock Working.
+- Separate Supply section order: Allowed Supply Locations, Supply Report, Supply Upload.
+- Total Stock Upload button binding is repaired and made defensive.
+
+## After upload
+
+Commit the files, wait for GitHub Pages deployment, then press `Ctrl + Shift + R`.

@@ -18,7 +18,7 @@
 (() => {
   'use strict';
 
-  const MODULE_VERSION = '2.4.0';
+  const MODULE_VERSION = '2.5.0';
   const ALLOWED_STORAGE_KEY = 'official_reports_dev_allowed_supply_locations_v1';
 
   const SUPPLY_REQUIRED_COLUMNS = [
@@ -82,18 +82,6 @@
     const style = document.createElement('style');
     style.id = 'supplyModule24Styles';
     style.textContent = `
-      #manTable th:nth-child(4),
-      #manTable td:nth-child(4) {
-        min-width: 440px;
-        width: 440px;
-        max-width: none;
-      }
-
-      #manTable td:nth-child(4) input {
-        min-width: 420px;
-        width: 100%;
-      }
-
       .supply-status-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -181,37 +169,30 @@
   }
 
   function rebuildSupplyNavigation() {
-    [
-      'allowed-supply-locations',
-      'supply-report',
-      'supply-upload'
-    ].forEach(pageId => {
+    ['allowed-supply-locations','supply-report','supply-upload'].forEach(pageId => {
       const old = document.querySelector(`.nav[data-p="${pageId}"]`);
       if (old) old.remove();
     });
 
-    const planSupplyNav = document.querySelector('.nav[data-p="plan-supply"]');
-    if (!planSupplyNav) return;
+    document.querySelectorAll('.supply-report-label').forEach(label => label.remove());
 
-    const parent = planSupplyNav.parentNode;
+    const sidebar = document.querySelector('.side');
+    if (!sidebar) return;
 
-    // Explicit requested order: Supply Upload is the last item.
-    parent.insertBefore(
-      createNavButton('allowed-supply-locations', 'Allowed Supply Locations'),
-      planSupplyNav.nextSibling
-    );
+    /* Supply is an independent report section, outside TOTAL STOCK WORKING. */
+    const label = document.createElement('div');
+    label.className = 'label supply-report-label';
+    label.textContent = 'SUPPLY REPORT';
+    sidebar.appendChild(label);
+    sidebar.appendChild(createNavButton('allowed-supply-locations', 'Allowed Supply Locations'));
+    sidebar.appendChild(createNavButton('supply-report', 'Supply Report'));
+    sidebar.appendChild(createNavButton('supply-upload', 'Supply Upload'));
 
-    const allowedNav = document.querySelector('.nav[data-p="allowed-supply-locations"]');
-    parent.insertBefore(
-      createNavButton('supply-report', 'Supply Report'),
-      allowedNav.nextSibling
-    );
-
-    const reportNav = document.querySelector('.nav[data-p="supply-report"]');
-    parent.insertBefore(
-      createNavButton('supply-upload', 'Supply Upload'),
-      reportNav.nextSibling
-    );
+    if (typeof window.rebuildSidebarAccordion === 'function') {
+      window.rebuildSidebarAccordion();
+    } else if (typeof window.bindSidebarNavigation === 'function') {
+      window.bindSidebarNavigation(sidebar);
+    }
   }
 
   function removeExistingSupplyPages() {

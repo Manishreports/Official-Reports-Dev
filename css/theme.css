@@ -45,3 +45,37 @@
 #manTable th:nth-child(4),#manTable td:nth-child(4),
 #manTable td:nth-child(4) input{min-width:0!important;width:auto!important;max-width:64ch!important}
 #manTable th:last-child,#manTable td:last-child{min-width:0!important;width:auto!important}
+
+/* Smooth accordion override 2.7 */
+.side > .nav-section { margin: 6px 0; overflow: hidden; }
+.nav-section-title {
+  transition: background-color .22s ease, color .22s ease, transform .22s ease;
+}
+.nav-section-title:hover { transform: translateX(2px); }
+.nav-chevron { transform: rotate(-90deg); transition: transform .28s cubic-bezier(.2,.8,.2,1); }
+.nav-section.open > .nav-section-title .nav-chevron { transform: rotate(0deg); }
+.side > .nav-section > .nav-section-items {
+  display: grid !important;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transform: translateY(-5px);
+  padding: 0;
+  visibility: hidden;
+  transition: grid-template-rows .30s cubic-bezier(.2,.8,.2,1), opacity .22s ease, transform .30s ease, padding .30s ease, visibility 0s linear .30s;
+}
+.side > .nav-section > .nav-section-items > * { min-height: 0; overflow: hidden; }
+.side > .nav-section.open > .nav-section-items {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transform: translateY(0);
+  padding: 3px 0 6px;
+  visibility: visible;
+  transition: grid-template-rows .30s cubic-bezier(.2,.8,.2,1), opacity .24s ease .04s, transform .30s ease, padding .30s ease, visibility 0s;
+}
+/* Hover only highlights; it does not force sections open. */
+.side > .nav-section:hover > .nav-section-items:not([aria-hidden="false"]) {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  padding: 0;
+}

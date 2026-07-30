@@ -1,26 +1,23 @@
-# Official Reports Dev UI Module 2.6
+# Official Reports Dev UI Module 2.7
 
-Replace these files in `Official-Reports-Dev`:
+## Fixes
+
+- File chooser buttons made reliable for Plan, Raw Stock, Total Stock and Supply uploads.
+- Dynamic Supply Upload button is also detected after the page is created.
+- Sidebar accordion now opens and closes with a smooth height/fade animation.
+- Hover only highlights a section; it no longer opens/closes the menu unexpectedly.
+- Only one section stays open at a time.
+- The section containing the active page opens automatically.
+- Supply Report remains an independent sidebar section outside TOTAL STOCK WORKING.
+
+## Replace / add these files
 
 - `index.html`
 - `css/theme.css`
 - `js/ui/navigation.js`
-- `js/ui/table-layout.js` (new file)
+- `js/ui/upload-runtime-fix.js` (new)
+- `js/ui/table-layout.js`
 - `js/total-stock/total-stock.js`
 - `js/total-stock/supply-module.js`
 
-## Fixed in 2.6
-
-- Sidebar is a real accordion: initially only WORKSPACE, CORE PENDING, HO STOCK, TOTAL STOCK WORKING and SUPPLY REPORT headings are visible.
-- Existing accordion groups are no longer destroyed when Supply navigation is inserted.
-- SUPPLY REPORT is outside TOTAL STOCK WORKING and contains:
-  - Allowed Supply Locations
-  - Supply Report
-  - Supply Upload
-- Manual Material Add no longer stretches Plant, Storage Location and Material columns across the page.
-- Editable table inputs resize from their actual value/header length.
-- Rows stay compact; long values and extra columns use horizontal scrolling instead of increasing row height.
-- All headings and cell data remain center aligned.
-- Total Stock Upload fix from 2.5 is retained.
-
-After commit and GitHub Pages deployment, perform a hard refresh (`Ctrl + Shift + R`).
+After GitHub Pages deployment, use `Ctrl + Shift + R` once.

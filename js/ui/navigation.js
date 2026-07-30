@@ -1,4 +1,4 @@
-/* OFFICIAL REPORTS DEV - ACCORDION SIDEBAR 2.6 */
+/* OFFICIAL REPORTS DEV - SMOOTH ACCORDION SIDEBAR 2.7 */
 (() => {
   'use strict';
 
@@ -27,12 +27,17 @@
     });
   }
 
+  function setSectionOpen(section, open) {
+    const title = section.querySelector(':scope > .nav-section-title');
+    const items = section.querySelector(':scope > .nav-section-items');
+    section.classList.toggle('open', open);
+    if (title) title.setAttribute('aria-expanded', String(open));
+    if (items) items.setAttribute('aria-hidden', String(!open));
+  }
+
   function closeOtherSections(sidebar, current) {
     sidebar.querySelectorAll(':scope > .nav-section.open').forEach(section => {
-      if (section === current) return;
-      section.classList.remove('open');
-      const sectionTitle = section.querySelector(':scope > .nav-section-title');
-      if (sectionTitle) sectionTitle.setAttribute('aria-expanded', 'false');
+      if (section !== current) setSectionOpen(section, false);
     });
   }
 
@@ -43,11 +48,12 @@
     const title = document.createElement('button');
     title.type = 'button';
     title.className = 'nav-section-title';
-    title.innerHTML = `<span>${label.textContent.trim()}</span><span class="nav-chevron" aria-hidden="true">›</span>`;
+    title.innerHTML = `<span>${label.textContent.trim()}</span><span class="nav-chevron" aria-hidden="true">⌄</span>`;
     title.setAttribute('aria-expanded', 'false');
 
     const items = document.createElement('div');
     items.className = 'nav-section-items';
+    items.setAttribute('aria-hidden', 'true');
 
     let node = label.nextElementSibling;
     while (node && !node.classList.contains('label') && !node.classList.contains('nav-section')) {
@@ -59,25 +65,27 @@
     label.replaceWith(section);
     section.append(title, items);
 
-    title.addEventListener('click', () => {
+    title.addEventListener('click', event => {
+      event.preventDefault();
       const shouldOpen = !section.classList.contains('open');
       closeOtherSections(sidebar, section);
-      section.classList.toggle('open', shouldOpen);
-      title.setAttribute('aria-expanded', String(shouldOpen));
+      setSectionOpen(section, shouldOpen);
     });
+  }
+
+  function openActiveSection(sidebar) {
+    const active = sidebar.querySelector('.nav.active');
+    const section = active ? active.closest('.nav-section') : sidebar.querySelector('.nav-section');
+    if (section) setSectionOpen(section, true);
   }
 
   function buildSidebarAccordion() {
     const sidebar = document.querySelector('.side');
     if (!sidebar) return;
 
-    /* Existing accordion sections are intentionally preserved.
-       Only newly inserted direct labels (for example SUPPLY REPORT) are wrapped. */
-    [...sidebar.querySelectorAll(':scope > .label')].forEach(label => {
-      createSectionFromLabel(sidebar, label);
-    });
-
+    [...sidebar.querySelectorAll(':scope > .label')].forEach(label => createSectionFromLabel(sidebar, label));
     bindNavButtons(sidebar);
+    openActiveSection(sidebar);
   }
 
   window.rebuildSidebarAccordion = buildSidebarAccordion;

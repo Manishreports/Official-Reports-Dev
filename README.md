@@ -1,23 +1,35 @@
-# Official Reports Dev UI Module 2.7
+# Official Reports Dev UI Module 2.8 - Upload Hotfix
 
-## Fixes
+## Critical fix
 
-- File chooser buttons made reliable for Plan, Raw Stock, Total Stock and Supply uploads.
-- Dynamic Supply Upload button is also detected after the page is created.
-- Sidebar accordion now opens and closes with a smooth height/fade animation.
-- Hover only highlights a section; it no longer opens/closes the menu unexpectedly.
-- Only one section stays open at a time.
-- The section containing the active page opens automatically.
-- Supply Report remains an independent sidebar section outside TOTAL STOCK WORKING.
+Version 2.7 ka `upload-runtime-fix.js` browser ke normal upload event ko capture karke rok raha tha. Is wajah se Plan, Raw Stock, Total Stock aur Supply uploads `Waiting... 0%` par ruk sakte the.
 
-## Replace / add these files
+Version 2.8 me woh global interceptor poori tarah hata diya gaya hai. Har module ab apna original file input/change handler use karta hai.
+
+## Retained
+
+- Smooth click-based accordion sidebar
+- Supply Report independent sidebar section
+- Compact tables
+- Content-based editable column widths
+- Horizontal scrolling for wide tables
+- Center-aligned headings and data
+
+## Replace/add these files
 
 - `index.html`
 - `css/theme.css`
 - `js/ui/navigation.js`
-- `js/ui/upload-runtime-fix.js` (new)
 - `js/ui/table-layout.js`
 - `js/total-stock/total-stock.js`
 - `js/total-stock/supply-module.js`
 
-After GitHub Pages deployment, use `Ctrl + Shift + R` once.
+## Important cleanup
+
+Delete this old file from the repository if present:
+
+- `js/ui/upload-runtime-fix.js`
+
+It is no longer loaded by `index.html`, but deleting it avoids future confusion.
+
+After deployment, use a hard refresh (`Ctrl + Shift + R`).

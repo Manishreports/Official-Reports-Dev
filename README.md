@@ -1,35 +1,18 @@
-# Official Reports Dev UI Module 2.8 - Upload Hotfix
+# Official Reports Dev — Test Release 2.0
 
-## Critical fix
+This development build keeps production calculations unchanged and adds only foundation/UI/import improvements.
 
-Version 2.7 ka `upload-runtime-fix.js` browser ke normal upload event ko capture karke rok raha tha. Is wajah se Plan, Raw Stock, Total Stock aur Supply uploads `Waiting... 0%` par ruk sakte the.
+## New in this test build
 
-Version 2.8 me woh global interceptor poori tarah hata diya gaya hai. Har module ab apna original file input/change handler use karta hai.
+- Excel sheet selection is mandatory on every upload.
+- Column mapping appears when required headings do not match.
+- Mapping can be temporary or permanently remembered by the user.
+- Scroll-to-top floating button.
+- Indian comma display in previews and reports.
+- Styled Excel export with green headings, thin borders, Indian comma number style, adjusted widths and estimated row heights.
+- Excel auto-filter removed.
+- Total Stock upload still remains preview-only; business logic will be developed next.
 
-## Retained
+## Deployment
 
-- Smooth click-based accordion sidebar
-- Supply Report independent sidebar section
-- Compact tables
-- Content-based editable column widths
-- Horizontal scrolling for wide tables
-- Center-aligned headings and data
-
-## Replace/add these files
-
-- `index.html`
-- `css/theme.css`
-- `js/ui/navigation.js`
-- `js/ui/table-layout.js`
-- `js/total-stock/total-stock.js`
-- `js/total-stock/supply-module.js`
-
-## Important cleanup
-
-Delete this old file from the repository if present:
-
-- `js/ui/upload-runtime-fix.js`
-
-It is no longer loaded by `index.html`, but deleting it avoids future confusion.
-
-After deployment, use a hard refresh (`Ctrl + Shift + R`).
+Upload all extracted files to `Official-Reports-Dev`, enable GitHub Pages from `main / root`, then hard refresh.

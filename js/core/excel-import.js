@@ -42,8 +42,7 @@ const ExcelImport = (() => {
             type: 'array',
             cellDates: false,
             cellFormula: false,
-            cellText: false,
-            cellStyles: true
+            cellText: false
           }));
         } catch (error) {
           reject(error);

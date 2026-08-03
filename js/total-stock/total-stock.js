@@ -1,6 +1,6 @@
 const TOTAL_STOCK_REQUIRED_COLUMNS=[
-  'Plant','Plant Name','Location','Material No.','Description','Net wt','Case Size',
-  'Stock (ps)','Transit(Ps)','Avg Sale','HO.Blc Qty'
+  'Plant','Plant Name','Location','REGION NAME','AREA','Material No.','Description','Category','Net wt','Case Size',
+  'Stock (ps)','Transit(Ps)','Avg Sale','Stock (KG)','Transit(KG)','HO.Blc Qty'
 ];
 const PLAN_HO_PENDING_COLUMNS=[
   ['Bakal Pending','Bakal Pending'],
@@ -72,6 +72,7 @@ async function uploadTotalStockFile(event){
     drawTotalStock();drawPlanHo();refreshTotalStockStatus();refresh();
     $('totalStockInfo').textContent=`${totalStockRows.length.toLocaleString('en-IN')} rows loaded from ${result.sheetName}.`;
     if(totalStockDuplicateRows.length)showDuplicatePopup();else toast('Total Stock data loaded');
+    if(window.InventoryDashboard&&typeof window.InventoryDashboard.onTotalStockLoaded==='function')window.InventoryDashboard.onTotalStockLoaded();
   }catch(error){if(error.message!=='Upload cancelled')toast(error.message||'Total Stock file read nahi hui')}
   finally{$('totalStockFile').value=''}
 }

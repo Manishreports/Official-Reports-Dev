@@ -37,7 +37,7 @@ async function readMappedFile(file,type){
       console.error(error);
       toast(error.message||'File read nahi hui');
     }
-    prog(prefix,0,'Waiting...',0,0);
+    prog(prefix,0,'Upload failed',0,0);
   }finally{
     if(type==='s')$('stockFile').value='';
     else $('planFile').value='';

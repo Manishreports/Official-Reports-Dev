@@ -42,7 +42,8 @@ const ExcelImport = (() => {
             type: 'array',
             cellDates: false,
             cellFormula: false,
-            cellText: false
+            cellText: false,
+            cellStyles: true
           }));
         } catch (error) {
           reject(error);
@@ -223,11 +224,18 @@ const ExcelImport = (() => {
   }
 
   async function importMapped(file, profile, requiredColumns, onProgress) {
+    await ExcelLibrary.ensure();
     const workbook = await readWorkbook(file, onProgress);
     const sheetName = await chooseSheet(workbook, file.name);
     const worksheet = workbook.Sheets[sheetName];
     const sourceRows = XLSX.utils.sheet_to_json(worksheet, { defval: '', raw: true });
-    const sourceHeaders = sourceRows.length ? Object.keys(sourceRows[0]).map(cleanHeader) : [];
+    const originalHeaders = sourceRows.length ? Object.keys(sourceRows[0]).filter(key => key !== '__rowNum__') : [];
+    const originalByCleanHeader = new Map();
+    originalHeaders.forEach(original => {
+      const cleaned = cleanHeader(original);
+      if (cleaned && !originalByCleanHeader.has(cleaned)) originalByCleanHeader.set(cleaned, original);
+    });
+    const sourceHeaders = [...originalByCleanHeader.keys()];
 
     if (!sourceRows.length || !sourceHeaders.length) {
       throw new Error('Selected sheet empty hai');
@@ -250,7 +258,8 @@ const ExcelImport = (() => {
     const rows = sourceRows.map(sourceRow => {
       const output = {};
       requiredColumns.forEach(required => {
-        output[required] = sourceRow[mapping[required]] ?? '';
+        const originalHeader = originalByCleanHeader.get(mapping[required]) || mapping[required];
+        output[required] = sourceRow[originalHeader] ?? '';
       });
       return output;
     });

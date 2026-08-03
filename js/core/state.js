@@ -4,6 +4,7 @@ const CC=['SPlt','Plant','Plant Name','Location','Material No.','Description','S
 let stock=[],plan=[],manual=[],remarks=[],cats=[],mblocks=[],raipur=[],mpending=[],bsto=[],core=[],planning=[];
 let allowedLocations=['MAIN','AMBL','DEHR','ROUP'];
 let totalStockRows=[],totalStockHeaders=[],spltPlanMap={};
+let totalStockPlanHoRows=[],totalStockPlanHoHeaders=[],totalStockDuplicateRows=[],totalStockSourceSheet='',totalStockSourceHasForecast=false,totalStockSourceFileName='';
 let setup=[{Order:1,Remarks:'Bakal',Show:'Yes',PlanSource:'Planning Database',Previous:''},{Order:2,Remarks:'DOFL',Show:'Yes',PlanSource:'Previous Negative Pending',Previous:'Bakal Pending'},{Order:3,Remarks:'9916',Show:'Yes',PlanSource:'Previous Negative Pending',Previous:'DOFL Pending'},{Order:4,Remarks:'Bakal Ecom',Show:'Yes',PlanSource:'Previous Negative Pending',Previous:'9916 Pending'},{Order:5,Remarks:'Tolagaon',Show:'Yes',PlanSource:'Planning Database',Previous:''},{Order:6,Remarks:'9918',Show:'Yes',PlanSource:'Previous Negative Pending',Previous:'Tolagaon Pending'},{Order:7,Remarks:'9919',Show:'Yes',PlanSource:'Previous Negative Pending',Previous:'9918 Pending'},{Order:8,Remarks:'Tolagaon Ecom',Show:'Yes',PlanSource:'Previous Negative Pending',Previous:'9919 Pending'}];
 let ph=[],pr=[],mh=[],mr=[],sh=[],sr=[],fh=[],fr=[];
 const $=x=>document.getElementById(x);

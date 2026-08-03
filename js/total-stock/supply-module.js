@@ -18,7 +18,7 @@
 (() => {
   'use strict';
 
-  const MODULE_VERSION = '2.5.0';
+  const MODULE_VERSION = '2.4.0';
   const ALLOWED_STORAGE_KEY = 'official_reports_dev_allowed_supply_locations_v1';
 
   const SUPPLY_REQUIRED_COLUMNS = [
@@ -77,54 +77,7 @@
   }
 
   function addStyles() {
-    if ($('supplyModule24Styles')) return;
-
-    const style = document.createElement('style');
-    style.id = 'supplyModule24Styles';
-    style.textContent = `
-      .supply-status-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 12px;
-        margin-bottom: 18px;
-      }
-
-      .supply-status-card {
-        background: #fff;
-        border: 1px solid #edf1f6;
-        border-radius: 17px;
-        padding: 14px;
-        box-shadow: 0 12px 30px rgba(36, 60, 105, .07);
-      }
-
-      .supply-status-card span {
-        display: block;
-        color: #788397;
-        font-size: 12px;
-        font-weight: 700;
-        margin-bottom: 5px;
-      }
-
-      .supply-status-card strong {
-        font-size: 22px;
-      }
-
-      .supply-location-toolbar {
-        display: grid;
-        grid-template-columns: minmax(220px, 1fr) auto;
-        gap: 10px;
-        align-items: center;
-        margin-bottom: 14px;
-      }
-
-      @media (max-width: 650px) {
-        .supply-location-toolbar {
-          grid-template-columns: 1fr;
-        }
-      }
-    `;
-
-    document.head.appendChild(style);
+    /* V3.0 uses the shared ERP theme. No module-specific table widths. */
   }
 
   function pageMeta(pageId) {
@@ -169,30 +122,37 @@
   }
 
   function rebuildSupplyNavigation() {
-    ['allowed-supply-locations','supply-report','supply-upload'].forEach(pageId => {
+    [
+      'allowed-supply-locations',
+      'supply-report',
+      'supply-upload'
+    ].forEach(pageId => {
       const old = document.querySelector(`.nav[data-p="${pageId}"]`);
       if (old) old.remove();
     });
 
-    document.querySelectorAll('.supply-report-label').forEach(label => label.remove());
+    const planSupplyNav = document.querySelector('.nav[data-p="plan-supply"]');
+    if (!planSupplyNav) return;
 
-    const sidebar = document.querySelector('.side');
-    if (!sidebar) return;
+    const parent = planSupplyNav.parentNode;
 
-    /* Supply is an independent report section, outside TOTAL STOCK WORKING. */
-    const label = document.createElement('div');
-    label.className = 'label supply-report-label';
-    label.textContent = 'SUPPLY REPORT';
-    sidebar.appendChild(label);
-    sidebar.appendChild(createNavButton('allowed-supply-locations', 'Allowed Supply Locations'));
-    sidebar.appendChild(createNavButton('supply-report', 'Supply Report'));
-    sidebar.appendChild(createNavButton('supply-upload', 'Supply Upload'));
+    // Explicit requested order: Supply Upload is the last item.
+    parent.insertBefore(
+      createNavButton('allowed-supply-locations', 'Allowed Supply Locations'),
+      planSupplyNav.nextSibling
+    );
 
-    if (typeof window.rebuildSidebarAccordion === 'function') {
-      window.rebuildSidebarAccordion();
-    } else if (typeof window.bindSidebarNavigation === 'function') {
-      window.bindSidebarNavigation(sidebar);
-    }
+    const allowedNav = document.querySelector('.nav[data-p="allowed-supply-locations"]');
+    parent.insertBefore(
+      createNavButton('supply-report', 'Supply Report'),
+      allowedNav.nextSibling
+    );
+
+    const reportNav = document.querySelector('.nav[data-p="supply-report"]');
+    parent.insertBefore(
+      createNavButton('supply-upload', 'Supply Upload'),
+      reportNav.nextSibling
+    );
   }
 
   function removeExistingSupplyPages() {

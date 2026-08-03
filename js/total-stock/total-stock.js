@@ -26,7 +26,19 @@ function formatIndian(value){return Q(value).toLocaleString('en-IN',{maximumFrac
 function totalStockCoreBuilt(){return $('coreInfo')&&NK($('coreInfo').textContent)!=='report not built.'}
 function totalStockMainReady(){return Array.isArray(mr)&&mr.some(r=>N(r['Material Description'])&&r['Material Description']!=='Grand Total')}
 function totalStockHeaderKey(v){return N(v).toLowerCase().replace(/[^a-z0-9]/g,'')}
-function copyCellStyle(style){if(!style)return null;try{return JSON.parse(JSON.stringify(style))}catch(e){return null}}
+function normalizeRgb(value){
+  const rgb=N(value).replace(/^#/, '').toUpperCase();
+  if(!rgb)return '';
+  return rgb.length===6?`FF${rgb}`:rgb.slice(-8);
+}
+function extractCellVisualStyle(cell){
+  const style=cell&&cell.s;if(!style)return null;
+  const fillRgb=normalizeRgb(style.fill&&style.fill.fgColor&&style.fill.fgColor.rgb);
+  const fontRgb=normalizeRgb(style.font&&style.font.color&&style.font.color.rgb);
+  const bold=Boolean(style.font&&style.font.bold);
+  if(!fillRgb&&!fontRgb&&!bold)return null;
+  return {fillRgb,fontRgb,bold};
+}
 
 async function uploadTotalStockFile(event){
   const file=event.target.files[0];
@@ -42,13 +54,13 @@ async function uploadTotalStockFile(event){
     let descColumn=-1;
     for(let c=range.s.c;c<=range.e.c;c++){
       const cell=ws[XLSX.utils.encode_cell({r:range.s.r,c})];
-      if(cell&&N(cell.v)===N(descHeader)){descColumn=c;break}
+      if(cell&&totalStockHeaderKey(cell.v)===totalStockHeaderKey(descHeader)){descColumn=c;break}
     }
     totalStockRows=result.rows.map((row,index)=>{
       const sourceRow=sourceRows[index]||{};
       const rowNumber=Number.isInteger(sourceRow.__rowNum__)?sourceRow.__rowNum__:index+1;
       let style=null;
-      if(descColumn>=0){const cell=ws[XLSX.utils.encode_cell({r:rowNumber,c:descColumn})];style=copyCellStyle(cell&&cell.s)}
+      if(descColumn>=0){const cell=ws[XLSX.utils.encode_cell({r:rowNumber,c:descColumn})];style=extractCellVisualStyle(cell)}
       return {...row,Forecast:forecastHeader?(sourceRow[forecastHeader]??''):'',_descriptionStyle:style,_sourceRow:rowNumber+1};
     });
     totalStockHeaders=[...TOTAL_STOCK_REQUIRED_COLUMNS,...(forecastHeader?['Forecast']:[])];
@@ -131,9 +143,9 @@ function buildPlanHoReport(){
 
 function applyDescriptionStyleToCell(td,style){
   if(!style)return;
-  const fill=style.fill&&style.fill.fgColor&&style.fill.fgColor.rgb;if(fill&&fill.length>=6)td.style.backgroundColor='#'+fill.slice(-6);
-  const color=style.font&&style.font.color&&style.font.color.rgb;if(color&&color.length>=6)td.style.color='#'+color.slice(-6);
-  if(style.font&&style.font.bold)td.style.fontWeight='700';
+  if(style.fillRgb)td.style.backgroundColor='#'+style.fillRgb.slice(-6);
+  if(style.fontRgb)td.style.color='#'+style.fontRgb.slice(-6);
+  if(style.bold)td.style.fontWeight='700';
 }
 function displayPlanHoValue(header,value){if(header==='CFA.Stock %')return `${Math.round(Q(value)*100).toLocaleString('en-IN')}%`;if(TS_NUMBER_COLUMNS.has(header))return formatIndian(value);return value??''}
 function drawTotalStock(){
@@ -153,7 +165,7 @@ function buildPlanHoWorksheet(){
   const data=[totalStockPlanHoHeaders,...totalStockPlanHoRows.map(r=>totalStockPlanHoHeaders.map(h=>r[h]??''))];
   const ws=XLSX.utils.aoa_to_sheet(data);const border={top:{style:'thin',color:{rgb:'FFD9E1EA'}},bottom:{style:'thin',color:{rgb:'FFD9E1EA'}},left:{style:'thin',color:{rgb:'FFD9E1EA'}},right:{style:'thin',color:{rgb:'FFD9E1EA'}}};
   totalStockPlanHoHeaders.forEach((h,c)=>{const cell=ws[XLSX.utils.encode_cell({r:0,c})];cell.s={font:{bold:true,color:{rgb:'FFFFFFFF'}},fill:{patternType:'solid',fgColor:{rgb:'FF003366'}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border};});
-  totalStockPlanHoRows.forEach((row,rIndex)=>{totalStockPlanHoHeaders.forEach((h,c)=>{const cell=ws[XLSX.utils.encode_cell({r:rIndex+1,c})];if(!cell)return;cell.s={font:{color:{rgb:'FF000000'}},alignment:{horizontal:TS_NUMBER_COLUMNS.has(h)?'right':'center',vertical:'top',wrapText:true},border};if(TS_NUMBER_COLUMNS.has(h))cell.z=h==='CFA.Stock %'?'0%':'#,##,##0.##';if(h==='Description'&&row._descriptionStyle){const src=row._descriptionStyle;if(src.fill)cell.s.fill=src.fill;if(src.font)cell.s.font={...cell.s.font,...src.font};}})});
+  totalStockPlanHoRows.forEach((row,rIndex)=>{totalStockPlanHoHeaders.forEach((h,c)=>{const cell=ws[XLSX.utils.encode_cell({r:rIndex+1,c})];if(!cell)return;cell.s={font:{color:{rgb:'FF000000'}},alignment:{horizontal:TS_NUMBER_COLUMNS.has(h)?'right':'center',vertical:'top',wrapText:true},border};if(TS_NUMBER_COLUMNS.has(h))cell.z=h==='CFA.Stock %'?'0%':'#,##,##0.##';if(h==='Description'&&row._descriptionStyle){const src=row._descriptionStyle;if(src.fillRgb)cell.s.fill={patternType:'solid',fgColor:{rgb:src.fillRgb}};if(src.fontRgb||src.bold)cell.s.font={...cell.s.font,...(src.fontRgb?{color:{rgb:src.fontRgb}}:{}),...(src.bold?{bold:true}:{})};}})});
   ws['!cols']=totalStockPlanHoHeaders.map(h=>({wch:h==='Description'?36:h==='Plant Name'?22:Math.min(Math.max(h.length+3,12),22)}));ws['!rows']=[{hpt:28},...totalStockPlanHoRows.map(r=>({hpt:Math.max(20,Math.ceil(N(r.Description).length/40)*15)}))];return ws;
 }
 function downloadPlanHoReport(){

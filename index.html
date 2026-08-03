@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Official Reports V3.0 - Manish Pandey</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
-  <link rel="stylesheet" href="css/theme.css?v=3.0.1">
+  <link rel="stylesheet" href="css/theme.css?v=3.0.2">
 </head>
 <body>
 <div class="app">
@@ -50,7 +50,7 @@
     </header>
 
     <section id="overview" class="page active">
-      <div class="hero"><small>REPORTING CONTROL CENTER</small><h2>Fast stock, pending and planning reports</h2></div>
+      <div class="hero"><h2>Fast stock, pending and planning reports</h2></div>
       <div class="metrics">
         <div class="metric"><span>Raw Stock Rows</span><strong id="dStock">0</strong></div>
         <div class="metric"><span>Plan Rows</span><strong id="dPlan">0</strong></div>
@@ -58,9 +58,16 @@
         <div class="metric"><span>Planning Records</span><strong id="dPlanning">0</strong></div>
         <div class="metric warn"><span>Remarks Pending</span><strong id="dRem">0</strong></div>
         <div class="metric"><span>Blocked STO</span><strong id="dBlock">0</strong></div>
+        <div class="metric"><span>Supply Rows</span><strong id="dSupplyRows">0</strong></div>
+        <div class="metric"><span>Total Supply</span><strong id="dSupplyQty">0</strong></div>
       </div>
       <div class="panel"><div class="head"><h3>Status & Activity</h3><span id="stockStatus" class="pill">Ready</span></div><div id="log" class="activity"><div>Tool started.</div></div></div>
       <div class="panel"><div class="head"><div><h3>Core Pending SPlt Summary</h3><p>Har SPlt ki total pending quantity.</p></div></div><div id="coreSpltOverviewSummary" class="dynamic-metrics"></div></div>
+      <div class="panel"><div class="head"><div><h3>Supply Summary</h3><p>Allowed Supply Locations ke hisab se current Supply position.</p></div></div><div id="supplyOverviewSummary" class="dynamic-metrics"></div></div>
+      <div class="overview-two-column">
+        <div class="panel"><div class="head"><div><h3>Top 20 Material — Plan</h3><p>Core Pending STO Qty ke material-wise totals.</p></div></div><div class="tablewrap compact overview-table"><table id="topPlanMaterialsTable"><thead></thead><tbody></tbody></table></div></div>
+        <div class="panel"><div class="head"><div><h3>Top 20 Material — Supply</h3><p>Allowed Supply data ke material-wise totals.</p></div></div><div class="tablewrap compact overview-table"><table id="topSupplyMaterialsTable"><thead></thead><tbody></tbody></table></div></div>
+      </div>
     </section>
 
     <section id="reports-dashboard" class="page">
@@ -162,14 +169,15 @@
 <script src="js/pending/manual-pending.js?v=1.0.0"></script>
 <script src="js/pending/block-sto.js?v=1.0.0"></script>
 <script src="js/pending/core-pending.js?v=2.2.0"></script>
-<script src="js/total-stock/total-stock.js?v=3.0.0"></script>
-<script src="js/total-stock/supply-module.js?v=3.0.0"></script>
+<script src="js/total-stock/total-stock.js?v=3.0.2"></script>
+<script src="js/total-stock/supply-module.js?v=3.0.2"></script>
 <script src="js/reports/report-controller.js?v=2.0.0"></script>
 <script src="js/reports/pivot-report.js?v=1.0.0"></script>
 <script src="js/reports/main-report.js?v=1.0.0"></script>
 <script src="js/reports/signature-report.js?v=1.0.0"></script>
 <script src="js/reports/final-report.js?v=1.0.0"></script>
-<script src="js/reports/report-renderer.js?v=2.0.0"></script>
-<script src="js/core/app.js?v=2.2.0"></script>
+<script src="js/reports/report-renderer.js?v=3.0.2"></script>
+<script src="js/ui/dashboard-insights.js?v=3.0.2"></script>
+<script src="js/core/app.js?v=3.0.2"></script>
 </body>
 </html>

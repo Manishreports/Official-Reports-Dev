@@ -122,37 +122,34 @@
   }
 
   function rebuildSupplyNavigation() {
-    [
-      'allowed-supply-locations',
-      'supply-report',
-      'supply-upload'
-    ].forEach(pageId => {
+    ['allowed-supply-locations','supply-report','supply-upload'].forEach(pageId => {
       const old = document.querySelector(`.nav[data-p="${pageId}"]`);
       if (old) old.remove();
     });
 
-    const planSupplyNav = document.querySelector('.nav[data-p="plan-supply"]');
-    if (!planSupplyNav) return;
+    const oldLabel = document.querySelector('.side > .supply-report-label');
+    if (oldLabel) oldLabel.remove();
+    const oldSection = document.querySelector('.side > .supply-independent-section');
+    if (oldSection) oldSection.remove();
 
-    const parent = planSupplyNav.parentNode;
+    const sidebar = document.querySelector('.side');
+    if (!sidebar) return;
 
-    // Explicit requested order: Supply Upload is the last item.
-    parent.insertBefore(
-      createNavButton('allowed-supply-locations', 'Allowed Supply Locations'),
-      planSupplyNav.nextSibling
-    );
+    const label = document.createElement('div');
+    label.className = 'label supply-report-label';
+    label.textContent = 'SUPPLY REPORT';
 
-    const allowedNav = document.querySelector('.nav[data-p="allowed-supply-locations"]');
-    parent.insertBefore(
-      createNavButton('supply-report', 'Supply Report'),
-      allowedNav.nextSibling
-    );
+    sidebar.appendChild(label);
+    sidebar.appendChild(createNavButton('allowed-supply-locations', 'Allowed Supply Locations'));
+    sidebar.appendChild(createNavButton('supply-report', 'Supply Report'));
+    sidebar.appendChild(createNavButton('supply-upload', 'Supply Upload'));
 
-    const reportNav = document.querySelector('.nav[data-p="supply-report"]');
-    parent.insertBefore(
-      createNavButton('supply-upload', 'Supply Upload'),
-      reportNav.nextSibling
-    );
+    if (typeof window.rebuildSidebarAccordion === 'function') {
+      window.rebuildSidebarAccordion();
+      const section = [...sidebar.querySelectorAll(':scope > .nav-section')]
+        .find(item => item.querySelector('.section-name')?.textContent.trim() === 'SUPPLY REPORT');
+      if (section) section.classList.add('supply-independent-section');
+    }
   }
 
   function removeExistingSupplyPages() {
@@ -647,6 +644,7 @@
     if ($('supplyReportQtyTotal')) $('supplyReportQtyTotal').textContent = formatIndianNumber(reportTotal);
     if ($('supplyIgnoredRowCount')) $('supplyIgnoredRowCount').textContent = ignoredRows.toLocaleString('en-IN');
     if ($('allowedSupplyLocationCount')) $('allowedSupplyLocationCount').textContent = allowedSupplyLocations.length.toLocaleString('en-IN');
+    if (typeof window.refreshDashboardInsights === 'function') window.refreshDashboardInsights();
   }
 
   function buildPlanSupplyReport() {
@@ -822,9 +820,16 @@
         }
 
         if (header === 'Description' && row._descriptionStyle) {
-          if (row._descriptionStyle.fill) cell.s.fill = row._descriptionStyle.fill;
-          if (row._descriptionStyle.font) {
-            cell.s.font = { ...cell.s.font, ...row._descriptionStyle.font };
+          const visual = row._descriptionStyle;
+          if (visual.fillRgb) {
+            cell.s.fill = { patternType: 'solid', fgColor: { rgb: visual.fillRgb } };
+          }
+          if (visual.fontRgb || visual.bold) {
+            cell.s.font = {
+              ...cell.s.font,
+              ...(visual.fontRgb ? { color: { rgb: visual.fontRgb } } : {}),
+              ...(visual.bold ? { bold: true } : {})
+            };
           }
         }
       });
@@ -1018,6 +1023,37 @@
 
     console.info(`Supply Module ${MODULE_VERSION} loaded`);
   }
+
+  window.OfficialSupply = {
+    snapshot() {
+      const allowed = allowedLocationSet();
+      const allowedRows = supplyRows.filter(row => allowed.has(normalizedLocation(row.Location)));
+      const aggregate = new Map();
+      allowedRows.forEach(row => {
+        const material = N(row['Material No.']);
+        if (!material) return;
+        const materialKey = NK(material);
+        if (!aggregate.has(materialKey)) {
+          aggregate.set(materialKey, {
+            material,
+            description: N(row.Description),
+            qty: 0
+          });
+        }
+        const item = aggregate.get(materialKey);
+        item.qty += Q(row['Issue Qty']);
+        if (!item.description && row.Description) item.description = N(row.Description);
+      });
+      const materials = [...aggregate.values()].sort((a, b) => b.qty - a.qty);
+      return {
+        sourceRows: supplyRows.length,
+        allowedRows: allowedRows.length,
+        reportRows: supplyReportRows.length,
+        totalQty: allowedRows.reduce((sum, row) => sum + Q(row['Issue Qty']), 0),
+        materials
+      };
+    }
+  };
 
   initialize();
 })();

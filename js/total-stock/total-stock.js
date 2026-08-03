@@ -27,17 +27,82 @@ function totalStockCoreBuilt(){return $('coreInfo')&&NK($('coreInfo').textConten
 function totalStockMainReady(){return Array.isArray(mr)&&mr.some(r=>N(r['Material Description'])&&r['Material Description']!=='Grand Total')}
 function totalStockHeaderKey(v){return N(v).toLowerCase().replace(/[^a-z0-9]/g,'')}
 function normalizeRgb(value){
-  const rgb=N(value).replace(/^#/, '').toUpperCase();
-  if(!rgb)return '';
-  return rgb.length===6?`FF${rgb}`:rgb.slice(-8);
+  const raw=N(value).replace(/^#/, '').toUpperCase();
+  if(!raw)return '';
+  if(raw.length===8)return raw;
+  if(raw.length===6)return `FF${raw}`;
+  return '';
 }
-function extractCellVisualStyle(cell){
-  const style=cell&&cell.s;if(!style)return null;
-  const fillRgb=normalizeRgb(style.fill&&style.fill.fgColor&&style.fill.fgColor.rgb);
-  const fontRgb=normalizeRgb(style.font&&style.font.color&&style.font.color.rgb);
-  const bold=Boolean(style.font&&style.font.bold);
+function indexedColor(index){
+  const colors={5:'FFFFFF00',6:'FFFF00FF',9:'FFFFFFFF',10:'FFFF0000',13:'FFFF00FF',64:'FF000000'};
+  return colors[Number(index)]||'';
+}
+function colorFromObject(color){
+  if(!color)return '';
+  if(color.rgb)return normalizeRgb(color.rgb);
+  if(color.indexed!==undefined)return indexedColor(color.indexed);
+  return '';
+}
+function resolveWorkbookCellStyle(cell,workbook){
+  if(!cell)return null;
+  let style=cell.s;
+  if(typeof style==='number'&&workbook&&workbook.Styles){
+    const xf=workbook.Styles.CellXf&&workbook.Styles.CellXf[style];
+    if(xf){
+      const fill=workbook.Styles.Fills&&workbook.Styles.Fills[xf.fillId];
+      const font=workbook.Styles.Fonts&&workbook.Styles.Fonts[xf.fontId];
+      style={fill,font};
+    }
+  }else if(style&&style.fillId!==undefined&&workbook&&workbook.Styles){
+    style={
+      ...style,
+      fill:style.fill||(workbook.Styles.Fills&&workbook.Styles.Fills[style.fillId]),
+      font:style.font||(workbook.Styles.Fonts&&workbook.Styles.Fonts[style.fontId])
+    };
+  }
+  return style||null;
+}
+function extractCellVisualStyle(cell,workbook){
+  const style=resolveWorkbookCellStyle(cell,workbook);
+  if(!style)return null;
+  const fill=style.fill||{};
+  const font=style.font||{};
+  const fillRgb=colorFromObject(fill.fgColor)||colorFromObject(fill.bgColor)||colorFromObject(style.fgColor);
+  const fontRgb=colorFromObject(font.color);
+  const bold=Boolean(font.bold||font.b);
+  const pattern=fill.patternType||fill.pattern||style.patternType||'';
   if(!fillRgb&&!fontRgb&&!bold)return null;
-  return {fillRgb,fontRgb,bold};
+  return {fillRgb,fontRgb,bold,pattern};
+}
+async function extractDescriptionStylesWithExcelJs(file,sheetName,descriptionHeader){
+  const styles=new Map();
+  if(typeof ExcelJS==='undefined'||!file||!file.arrayBuffer)return styles;
+  try{
+    const workbook=new ExcelJS.Workbook();
+    await workbook.xlsx.load(await file.arrayBuffer());
+    const worksheet=workbook.getWorksheet(sheetName);
+    if(!worksheet)return styles;
+    let headerRowNumber=0,descriptionColumn=0;
+    const wanted=totalStockHeaderKey(descriptionHeader||'Description');
+    for(let r=1;r<=Math.min(10,worksheet.rowCount);r++){
+      const row=worksheet.getRow(r);
+      row.eachCell((cell,c)=>{if(!descriptionColumn&&totalStockHeaderKey(cell.value)===wanted){headerRowNumber=r;descriptionColumn=c;}});
+      if(descriptionColumn)break;
+    }
+    if(!descriptionColumn)return styles;
+    for(let r=headerRowNumber+1;r<=worksheet.rowCount;r++){
+      const cell=worksheet.getRow(r).getCell(descriptionColumn);
+      const fill=cell.fill||{};
+      const font=cell.font||{};
+      const fg=fill.fgColor||{};
+      const fc=font.color||{};
+      const fillRgb=normalizeRgb(fg.argb||fg.rgb||'');
+      const fontRgb=normalizeRgb(fc.argb||fc.rgb||'');
+      const bold=Boolean(font.bold);
+      if(fillRgb||fontRgb||bold)styles.set(r-headerRowNumber-1,{fillRgb,fontRgb,bold,pattern:fill.pattern||fill.type||''});
+    }
+  }catch(error){console.warn('ExcelJS description style read failed, using SheetJS fallback',error);}
+  return styles;
 }
 
 async function uploadTotalStockFile(event){
@@ -56,11 +121,12 @@ async function uploadTotalStockFile(event){
       const cell=ws[XLSX.utils.encode_cell({r:range.s.r,c})];
       if(cell&&totalStockHeaderKey(cell.v)===totalStockHeaderKey(descHeader)){descColumn=c;break}
     }
+    const excelJsStyles=await extractDescriptionStylesWithExcelJs(file,result.sheetName,descHeader);
     totalStockRows=result.rows.map((row,index)=>{
       const sourceRow=sourceRows[index]||{};
       const rowNumber=Number.isInteger(sourceRow.__rowNum__)?sourceRow.__rowNum__:index+1;
-      let style=null;
-      if(descColumn>=0){const cell=ws[XLSX.utils.encode_cell({r:rowNumber,c:descColumn})];style=extractCellVisualStyle(cell)}
+      let style=excelJsStyles.get(index)||null;
+      if(!style&&descColumn>=0){const cell=ws[XLSX.utils.encode_cell({r:rowNumber,c:descColumn})];style=extractCellVisualStyle(cell,result.workbook)}
       return {...row,Forecast:forecastHeader?(sourceRow[forecastHeader]??''):'',_descriptionStyle:style,_sourceRow:rowNumber+1};
     });
     totalStockHeaders=[...TOTAL_STOCK_REQUIRED_COLUMNS,...(forecastHeader?['Forecast']:[])];
@@ -166,7 +232,7 @@ function buildPlanHoWorksheet(){
   const data=[totalStockPlanHoHeaders,...totalStockPlanHoRows.map(r=>totalStockPlanHoHeaders.map(h=>r[h]??''))];
   const ws=XLSX.utils.aoa_to_sheet(data);const border={top:{style:'thin',color:{rgb:'FFD9E1EA'}},bottom:{style:'thin',color:{rgb:'FFD9E1EA'}},left:{style:'thin',color:{rgb:'FFD9E1EA'}},right:{style:'thin',color:{rgb:'FFD9E1EA'}}};
   totalStockPlanHoHeaders.forEach((h,c)=>{const cell=ws[XLSX.utils.encode_cell({r:0,c})];cell.s={font:{bold:true,color:{rgb:'FFFFFFFF'}},fill:{patternType:'solid',fgColor:{rgb:'FF003366'}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border};});
-  totalStockPlanHoRows.forEach((row,rIndex)=>{totalStockPlanHoHeaders.forEach((h,c)=>{const cell=ws[XLSX.utils.encode_cell({r:rIndex+1,c})];if(!cell)return;cell.s={font:{color:{rgb:'FF000000'}},alignment:{horizontal:TS_NUMBER_COLUMNS.has(h)?'right':'center',vertical:'top',wrapText:true},border};if(TS_NUMBER_COLUMNS.has(h))cell.z=h==='CFA.Stock %'?'0%':'#,##,##0.##';if(h==='Description'&&row._descriptionStyle){const src=row._descriptionStyle;if(src.fillRgb)cell.s.fill={patternType:'solid',fgColor:{rgb:src.fillRgb}};if(src.fontRgb||src.bold)cell.s.font={...cell.s.font,...(src.fontRgb?{color:{rgb:src.fontRgb}}:{}),...(src.bold?{bold:true}:{})};}})});
+  totalStockPlanHoRows.forEach((row,rIndex)=>{totalStockPlanHoHeaders.forEach((h,c)=>{const cell=ws[XLSX.utils.encode_cell({r:rIndex+1,c})];if(!cell)return;cell.s={font:{color:{rgb:'FF000000'}},alignment:{horizontal:TS_NUMBER_COLUMNS.has(h)?'right':'center',vertical:'top',wrapText:true},border};if(TS_NUMBER_COLUMNS.has(h))cell.z=h==='CFA.Stock %'?'0%':'#,##,##0.##';if(h==='Description'&&row._descriptionStyle){const src=row._descriptionStyle;if(src.fillRgb)cell.s.fill={patternType:'solid',fgColor:{rgb:normalizeRgb(src.fillRgb)}};if(src.fontRgb||src.bold)cell.s.font={...cell.s.font,...(src.fontRgb?{color:{rgb:src.fontRgb}}:{}),...(src.bold?{bold:true}:{})};}})});
   ws['!cols']=totalStockPlanHoHeaders.map(h=>({wch:h==='Description'?36:h==='Plant Name'?22:Math.min(Math.max(h.length+3,12),22)}));ws['!rows']=[{hpt:28},...totalStockPlanHoRows.map(r=>({hpt:Math.max(20,Math.ceil(N(r.Description).length/40)*15)}))];return ws;
 }
 function downloadPlanHoReport(){

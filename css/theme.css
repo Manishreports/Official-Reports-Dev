@@ -36,3 +36,48 @@
 /* ===== V3.1 Inventory dashboards ===== */
 .location-order-grid{display:grid;gap:8px;margin-top:12px}.location-order-row{display:grid;grid-template-columns:minmax(220px,1fr) 120px;gap:12px;align-items:center;border:1px solid #dce4ed;border-radius:9px;padding:8px 10px}.location-order-row label{font-weight:750}.location-order-row input{width:100%;text-align:center}.dashboard-visibility{justify-content:flex-end}.dashboard-visibility label{display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border:1px solid #d7e0e9;border-radius:8px;background:#f8fafc;font-size:12px;font-weight:700}.dashboard-visibility input{width:auto}.inventory-dashboard-wrap{display:block;width:100%;max-width:100%}.inventory-dashboard-table{min-width:max-content!important;width:100%!important}.inventory-dashboard-table th,.inventory-dashboard-table td{min-width:88px}.inventory-dashboard-table th:nth-child(2),.inventory-dashboard-table td:nth-child(2),.inventory-dashboard-table th:nth-child(3),.inventory-dashboard-table td:nth-child(3),.inventory-dashboard-table th:nth-child(5),.inventory-dashboard-table td:nth-child(5){min-width:145px}.inventory-dashboard-panel .total td{background:#fff!important;color:#ef4444!important;font-weight:900;border-top:2px solid #111827}.inventory-ecom-label,.inventory-dashboard-label{margin-top:18px}.tablewrap td{min-width:max-content}.tablewrap td[title]{cursor:help}.tablewrap th,.tablewrap td{box-sizing:border-box}
 @media(max-width:760px){.location-order-row{grid-template-columns:1fr}.dashboard-visibility{justify-content:flex-start}}
+
+/* ===== Official Reports V3.2 dashboard refinements ===== */
+.report-dashboard-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(260px,1fr));
+  gap:16px;
+}
+.report-dashboard-card{
+  display:flex;
+  min-height:150px;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  padding:20px;
+  border:1px solid #dbe5ef;
+  border-radius:16px;
+  background:linear-gradient(145deg,#ffffff,#f4f8fb);
+  color:#172033;
+  text-align:left;
+  cursor:pointer;
+  box-shadow:0 10px 24px rgba(15,59,102,.08);
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.report-dashboard-card:hover{
+  transform:translateY(-3px);
+  border-color:#0f766e;
+  box-shadow:0 16px 32px rgba(15,59,102,.14);
+}
+.report-dashboard-card strong{font-size:17px;color:#003b66}
+.report-dashboard-card span{font-size:13px;line-height:1.55;color:#64748b}
+.report-dashboard-card em{font-size:12px;font-style:normal;font-weight:800;color:#0f766e}
+.location-order-paste{
+  min-height:320px;
+  white-space:pre;
+  overflow:auto;
+  font-family:Consolas,"Courier New",monospace;
+  line-height:1.55;
+}
+.mapping-example{display:block;margin-top:8px;color:#64748b}
+.overview-status-panel{margin-top:18px}
+.stock-overview-grid .tablewrap{max-height:430px}
+.inventory-dashboard-table td,
+.inventory-dashboard-table th{white-space:nowrap}
+@media(max-width:900px){.report-dashboard-grid{grid-template-columns:1fr}}

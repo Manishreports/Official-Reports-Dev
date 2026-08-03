@@ -3,9 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Official Reports V3.1 - Manish Pandey</title>
+  <title>Official Reports V3.2 - Manish Pandey</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
-  <link rel="stylesheet" href="css/theme.css?v=3.1.0">
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <link rel="stylesheet" href="css/theme.css?v=3.2.0">
 </head>
 <body>
 <div class="app">
@@ -46,7 +47,7 @@
   <main class="main">
     <header class="top">
       <div><h1 id="title">System Overview</h1><p id="sub">HO reporting workspace</p></div>
-      <span class="pill">V3.1 • Manish Pandey</span>
+      <span class="pill">V3.2 • Manish Pandey</span>
     </header>
 
     <section id="overview" class="page active">
@@ -61,13 +62,17 @@
         <div class="metric"><span>Supply Rows</span><strong id="dSupplyRows">0</strong></div>
         <div class="metric"><span>Total Supply</span><strong id="dSupplyQty">0</strong></div>
       </div>
-      <div class="panel"><div class="head"><h3>Status & Activity</h3><span id="stockStatus" class="pill">Ready</span></div><div id="log" class="activity"><div>Tool started.</div></div></div>
       <div class="panel"><div class="head"><div><h3>Core Pending SPlt Summary</h3><p>Har SPlt ki total pending quantity.</p></div></div><div id="coreSpltOverviewSummary" class="dynamic-metrics"></div></div>
       <div class="panel"><div class="head"><div><h3>Supply Summary</h3><p>Allowed Supply Locations ke hisab se current Supply position.</p></div></div><div id="supplyOverviewSummary" class="dynamic-metrics"></div></div>
       <div class="overview-two-column">
         <div class="panel"><div class="head"><div><h3>Top 20 Material — Plan</h3><p>Core Pending STO Qty ke material-wise totals.</p></div></div><div class="tablewrap compact overview-table"><table id="topPlanMaterialsTable"><thead></thead><tbody></tbody></table></div></div>
         <div class="panel"><div class="head"><div><h3>Top 20 Material — Supply</h3><p>Allowed Supply data ke material-wise totals.</p></div></div><div class="tablewrap compact overview-table"><table id="topSupplyMaterialsTable"><thead></thead><tbody></tbody></table></div></div>
       </div>
+      <div class="overview-two-column stock-overview-grid">
+        <div class="panel"><div class="head"><div><h3>Offline Stock</h3><p>Total Stock source ka Plant Name-wise Stock KG aur Transit KG.</p></div><div class="table-controls">Show <select id="offlineStockLimit" class="limit-select"><option>5</option><option>10</option><option>50</option></select></div></div><div class="tablewrap compact overview-table"><table id="offlineStockOverviewTable"><thead></thead><tbody></tbody></table></div></div>
+        <div class="panel"><div class="head"><div><h3>Online Stock</h3><p>ECOM & DROS source ka Plant Name-wise Stock KG aur Transit KG.</p></div><div class="table-controls">Show <select id="onlineStockLimit" class="limit-select"><option>5</option><option>10</option><option>50</option></select></div></div><div class="tablewrap compact overview-table"><table id="onlineStockOverviewTable"><thead></thead><tbody></tbody></table></div></div>
+      </div>
+      <div class="panel overview-status-panel"><div class="head"><h3>Status & Activity</h3><span id="stockStatus" class="pill">Ready</span></div><div id="log" class="activity"><div>Tool started.</div></div></div>
     </section>
 
     <section id="reports-dashboard" class="page">
@@ -169,7 +174,7 @@
 <script src="js/pending/manual-pending.js?v=1.0.0"></script>
 <script src="js/pending/block-sto.js?v=1.0.0"></script>
 <script src="js/pending/core-pending.js?v=2.2.0"></script>
-<script src="js/total-stock/total-stock.js?v=3.0.2"></script>
+<script src="js/total-stock/total-stock.js?v=3.2.0"></script>
 <script src="js/total-stock/supply-module.js?v=3.0.2"></script>
 <script src="js/reports/report-controller.js?v=2.0.0"></script>
 <script src="js/reports/pivot-report.js?v=1.0.0"></script>
@@ -177,8 +182,8 @@
 <script src="js/reports/signature-report.js?v=1.0.0"></script>
 <script src="js/reports/final-report.js?v=1.0.0"></script>
 <script src="js/reports/report-renderer.js?v=3.0.2"></script>
-<script src="js/ui/dashboard-insights.js?v=3.0.2"></script>
-<script src="js/dashboard/inventory-dashboard.js?v=3.1.0"></script>
+<script src="js/ui/dashboard-insights.js?v=3.2.0"></script>
+<script src="js/dashboard/inventory-dashboard.js?v=3.2.0"></script>
 <script src="js/core/app.js?v=3.0.2"></script>
 </body>
 </html>

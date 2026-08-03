@@ -1,4 +1,4 @@
-/* Official Reports V3.1 - Inventory dashboards and ECOM & DROS upload */
+/* Official Reports V3.2 - Inventory dashboards, ECOM & DROS upload, overview stock panels */
 (() => {
   'use strict';
 
@@ -19,7 +19,7 @@
   const txt = value => typeof N === 'function' ? N(value) : String(value ?? '').trim();
   const num = value => typeof Q === 'function' ? Q(value) : (Number(value) || 0);
   const norm = value => typeof NK === 'function' ? NK(value) : txt(value).toLowerCase();
-  const fmt = value => num(value).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+  const fmt = value => Math.round(num(value)).toLocaleString('en-IN', { maximumFractionDigits: 0 });
 
   function readJson(key, fallback) {
     try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
@@ -31,13 +31,24 @@
   function rowArea(row) { return txt(row.AREA ?? row.Area); }
   function stockKg(row) { return num(row['Stock (KG)'] ?? row['Stock (Kg)']); }
   function transitKg(row) { return num(row['Transit(KG)'] ?? row['Transit (KG)'] ?? row['Transit Stock(Kg)']); }
+  function escapeHtml(value) { return txt(value).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function activatePage(pageId, title) {
+    document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+    const page = el(pageId);
+    if (page) page.classList.add('active');
+    if (el('title')) el('title').textContent = title;
+    if (el('sub')) el('sub').textContent = 'Inventory analysis dashboard';
+    const main = document.querySelector('.main');
+    if (main) main.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   function insertUi() {
     const main = document.querySelector('.main');
     const sidebar = document.querySelector('.side');
     if (!main || !sidebar || el('complete-inventory-dashboard')) return;
 
-    // ECOM upload section is independent and placed after Supply section.
+    // ECOM & DROS upload remains an independent data-source option after Supply section.
     const ecomLabel = document.createElement('div');
     ecomLabel.className = 'label inventory-ecom-label';
     ecomLabel.textContent = 'ECOM & DROS STOCK';
@@ -46,22 +57,6 @@
     ecomNav.dataset.p = 'ecom-dros-stock';
     ecomNav.textContent = 'ECOM & DROS Stock Upload';
     sidebar.append(ecomLabel, ecomNav);
-
-    // Inventory dashboards as a separate section.
-    const dashLabel = document.createElement('div');
-    dashLabel.className = 'label inventory-dashboard-label';
-    dashLabel.textContent = 'INVENTORY DASHBOARDS';
-    sidebar.appendChild(dashLabel);
-    [
-      ['complete-inventory-dashboard','Complete Inventory'],
-      ['offline-inventory-dashboard','Offline Inventory'],
-      ['signature-inventory-dashboard','Signature Inventory'],
-      ['online-inventory-dashboard','Online Inventory']
-    ].forEach(([id, title]) => {
-      const button = document.createElement('button');
-      button.className = 'nav'; button.dataset.p = id; button.textContent = title;
-      sidebar.appendChild(button);
-    });
 
     const ecomPage = document.createElement('section');
     ecomPage.id = 'ecom-dros-stock'; ecomPage.className = 'page';
@@ -81,15 +76,19 @@
     main.appendChild(ecomPage);
 
     [
-      ['complete-inventory-dashboard','Complete Inventory Dashboard', ['Off line In_hand','Off line In_transit','On line In_hand','On line In_transit','Dros In_hand','Dros In_transit','Signature in Hand','Signature in Transit']],
-      ['offline-inventory-dashboard','Offline Inventory Dashboard', ['Off line In_hand','Off line In_transit']],
-      ['signature-inventory-dashboard','Signature Inventory Dashboard', ['Signature in Hand','Signature in Transit']],
-      ['online-inventory-dashboard','Online Inventory Dashboard', ['On line In_hand','On line In_transit']]
-    ].forEach(([id, title, metrics]) => main.appendChild(createDashboardPage(id, title, metrics)));
+      ['complete-inventory-dashboard','Complete Inventory Dashboard'],
+      ['offline-inventory-dashboard','Offline Inventory Dashboard'],
+      ['signature-inventory-dashboard','Signature Inventory Dashboard'],
+      ['online-inventory-dashboard','Online Inventory Dashboard']
+    ].forEach(([id, title]) => main.appendChild(createDashboardPage(id, title)));
+
+    buildReportsDashboardCards();
 
     el('ecomDrosBtn').onclick = () => el('ecomDrosFile').click();
     el('ecomDrosFile').onchange = uploadEcom;
     el('ecomLimit').onchange = drawEcomPreview;
+    if (el('offlineStockLimit')) el('offlineStockLimit').onchange = refreshOverviewStockTables;
+    if (el('onlineStockLimit')) el('onlineStockLimit').onchange = refreshOverviewStockTables;
     document.querySelectorAll('.dashboard-visibility input').forEach(input => input.addEventListener('change', event => {
       saveVisibility(event.target); drawAllDashboards();
     }));
@@ -98,7 +97,27 @@
     if (window.bindSidebarNavigation) window.bindSidebarNavigation();
   }
 
-  function createDashboardPage(id, title, metricHeaders) {
+  function buildReportsDashboardCards() {
+    const page = el('reports-dashboard');
+    if (!page) return;
+    page.innerHTML = `
+      <div class="panel reports-dashboard-home">
+        <div class="head"><div><h3>Reports Dashboard</h3><p>Inventory dashboards ko yahin se build aur open karein.</p></div></div>
+        <div class="report-dashboard-grid">
+          ${[
+            ['complete-inventory-dashboard','Complete Inventory Dashboard','Offline, Online, DROS aur Signature ka combined view.'],
+            ['offline-inventory-dashboard','Offline Inventory Dashboard','Total Stock source ka complete Stock KG aur Transit KG.'],
+            ['signature-inventory-dashboard','Signature Inventory Dashboard','Category me Signature wale materials ka view.'],
+            ['online-inventory-dashboard','Online Inventory Dashboard','ECOM + FK01 + DROS ka combined online view.']
+          ].map(([id,title,desc]) => `<button class="report-dashboard-card" type="button" data-dashboard-target="${id}"><strong>${title}</strong><span>${desc}</span><em>Open Dashboard →</em></button>`).join('')}
+        </div>
+      </div>`;
+    page.querySelectorAll('[data-dashboard-target]').forEach(button => {
+      button.onclick = () => openDashboard(button.dataset.dashboardTarget, button.querySelector('strong').textContent);
+    });
+  }
+
+  function createDashboardPage(id, title) {
     const section = document.createElement('section');
     section.id = id; section.className = 'page';
     section.innerHTML = `
@@ -115,7 +134,7 @@
         <div class="dynamic-metrics dashboard-summary"></div>
         <div class="tablewrap compact inventory-dashboard-wrap"><table class="inventory-dashboard-table"><thead></thead><tbody></tbody></table></div>
       </div>`;
-    section.querySelector('.edit-location-order').onclick = () => promptLocationOrder(true);
+    section.querySelector('.edit-location-order').onclick = () => promptLocationOrder(true, () => drawAllDashboards());
     return section;
   }
 
@@ -126,7 +145,7 @@
       const result = await ExcelImport.importMapped(file, 'ecom-dros-stock', ECOM_COLUMNS);
       ecomRows = result.rows.map(row => ({ ...row }));
       el('ecomDrosInfo').textContent = `${ecomRows.length.toLocaleString('en-IN')} rows loaded from ${result.sheetName}.`;
-      drawEcomPreview(); buildDashboards(); refreshEcomCards();
+      drawEcomPreview(); buildDashboards(); refreshEcomCards(); refreshOverviewStockTables();
       toast('ECOM & DROS Stock loaded');
     } catch (error) {
       if (error.message !== 'Upload cancelled') toast(error.message || 'ECOM & DROS file read nahi hui');
@@ -155,40 +174,79 @@
   }
 
   function locationOrders() { return readJson(ORDER_KEY, {}); }
+  function totalStockLocations() {
+    return [...new Set((Array.isArray(totalStockRows) ? totalStockRows : []).map(locationName).filter(Boolean))];
+  }
   function orderedLocations() {
     const orders = locationOrders();
-    return [...new Set((Array.isArray(totalStockRows) ? totalStockRows : []).map(locationName).filter(Boolean))]
-      .sort((a,b) => (Number(orders[norm(a)]) || 999999) - (Number(orders[norm(b)]) || 999999) || a.localeCompare(b));
+    return totalStockLocations().sort((a,b) => (Number(orders[norm(a)]) || 999999) - (Number(orders[norm(b)]) || 999999) || a.localeCompare(b));
   }
 
-  function promptLocationOrder(force = false) {
-    const locations = [...new Set((Array.isArray(totalStockRows) ? totalStockRows : []).map(locationName).filter(Boolean))];
-    if (!locations.length) { if (force) toast('Pehle Total Stock file upload karein'); return; }
+  function openDashboard(pageId, title) {
+    const locations = totalStockLocations();
+    if (!locations.length) { toast('Pehle Total Stock file upload karein'); return; }
+    const orders = locationOrders();
+    const missing = locations.filter(name => !orders[norm(name)]);
+    const finish = () => { buildDashboards(); activatePage(pageId, title); };
+    if (missing.length) promptLocationOrder(false, finish);
+    else finish();
+  }
+
+  function locationOrderText(locations, existing) {
+    const sorted = [...locations].sort((a,b) => (Number(existing[norm(a)]) || 999999) - (Number(existing[norm(b)]) || 999999) || a.localeCompare(b));
+    let next = Math.max(0, ...Object.values(existing).map(Number).filter(Number.isFinite));
+    return sorted.map(name => {
+      const current = Number(existing[norm(name)]) || ++next;
+      return `${current}\t${name}`;
+    }).join('\n');
+  }
+
+  function parseLocationOrderText(value, validLocations) {
+    const valid = new Map(validLocations.map(name => [norm(name), name]));
+    const next = {};
+    const used = new Set();
+    const errors = [];
+    txt(value).split(/\r?\n/).map(line => line.trim()).filter(Boolean).forEach((line, index) => {
+      const parts = line.split(/\t|,|\s{2,}/).map(item => item.trim()).filter(Boolean);
+      let order, name;
+      if (/^\d+$/.test(parts[0] || '')) { order = Number(parts[0]); name = parts.slice(1).join(' '); }
+      else if (/^\d+$/.test(parts[parts.length - 1] || '')) { order = Number(parts[parts.length - 1]); name = parts.slice(0, -1).join(' '); }
+      else { errors.push(`Line ${index + 1}: order number missing`); return; }
+      const canonical = valid.get(norm(name));
+      if (!canonical) { errors.push(`Line ${index + 1}: unknown Location ${name}`); return; }
+      if (!Number.isInteger(order) || order < 1 || used.has(order)) { errors.push(`Line ${index + 1}: duplicate/invalid order ${order}`); return; }
+      used.add(order); next[norm(canonical)] = order;
+    });
+    validLocations.forEach(name => { if (!next[norm(name)]) errors.push(`Missing Location: ${name}`); });
+    return { next, errors };
+  }
+
+  function promptLocationOrder(force = false, onSaved = null) {
+    const locations = totalStockLocations();
+    if (!locations.length) { toast('Pehle Total Stock file upload karein'); return; }
     const existing = locationOrders();
     const missing = locations.filter(name => !existing[norm(name)]);
-    if (!force && !missing.length) { buildDashboards(); return; }
-    const shown = force ? locations : missing;
-    el('mTitle').textContent = force ? 'Location Dashboard Order' : 'New Locations — Order Required';
-    el('mBody').innerHTML = '<p class="modal-help">Har Location ko unique order number dein. Ye order browser me remember rahega.</p>';
-    const grid = document.createElement('div'); grid.className = 'location-order-grid';
-    shown.forEach((name, index) => {
-      const row = document.createElement('div'); row.className = 'location-order-row';
-      row.innerHTML = `<label>${name}</label><input type="number" min="1" step="1" data-location="${escapeHtml(name)}" value="${existing[norm(name)] || (Object.keys(existing).length + index + 1)}">`;
-      grid.appendChild(row);
-    });
-    el('mBody').appendChild(grid);
-    el('mSave').textContent = 'Save Order';
-    el('mSave').onclick = () => {
-      const next = { ...existing }; const used = new Set(); let invalid = false;
-      grid.querySelectorAll('input').forEach(input => { const order = Number(input.value); if (!Number.isInteger(order) || order < 1 || used.has(order)) invalid = true; used.add(order); next[norm(input.dataset.location)] = order; });
-      if (invalid) { toast('Har Location ke liye unique positive order number dein'); return; }
-      saveJson(ORDER_KEY, next); closeM(); el('mSave').textContent = 'Save'; buildDashboards(); toast('Location order saved');
-    };
-    el('mCancel').onclick = () => { closeM(); el('mSave').textContent = 'Save'; };
-    el('mX').onclick = el('mCancel').onclick; openM();
-  }
+    if (!force && !missing.length) { if (onSaved) onSaved(); return; }
 
-  function escapeHtml(value) { return txt(value).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    el('mTitle').textContent = force ? 'Location Dashboard Order' : 'Dashboard Location Order Required';
+    el('mBody').innerHTML = `
+      <p class="modal-help">Sabhi Locations ko ek saath copy/paste karke order set karein. Format: <b>Order [TAB] Location</b>. Har Location ek line me ho.</p>
+      <textarea id="locationOrderPaste" class="location-order-paste" spellcheck="false"></textarea>
+      <small class="mapping-example">Example: 1[TAB]Punjab CFA</small>`;
+    el('locationOrderPaste').value = locationOrderText(locations, existing);
+    el('mSave').textContent = 'Save & Build';
+    el('mSave').onclick = () => {
+      const parsed = parseLocationOrderText(el('locationOrderPaste').value, locations);
+      if (parsed.errors.length) { toast(parsed.errors[0]); return; }
+      saveJson(ORDER_KEY, parsed.next);
+      closeM(); el('mSave').textContent = 'Save';
+      buildDashboards();
+      toast('Location order saved');
+      if (onSaved) onSaved();
+    };
+    const cancel = () => { closeM(); el('mSave').textContent = 'Save'; };
+    el('mCancel').onclick = cancel; el('mX').onclick = cancel; openM();
+  }
 
   function totalStockByLocation() {
     const map = new Map();
@@ -231,7 +289,7 @@
       const signature = { ...identity, 'Signature in Hand':b.signatureHand, 'Signature in Transit':b.signatureTransit }; signature.Total = signature['Signature in Hand'] + signature['Signature in Transit']; signatureRows.push(signature);
       const onlineRow = { ...identity, 'On line In_hand':o.allHand, 'On line In_transit':o.allTransit }; onlineRow.Total = onlineRow['On line In_hand'] + onlineRow['On line In_transit']; onlineRows.push(onlineRow);
     });
-    drawAllDashboards();
+    drawAllDashboards(); refreshOverviewStockTables();
   }
 
   function visibility() { return readJson(VISIBILITY_KEY, { region:true, area:true }); }
@@ -239,7 +297,7 @@
     const group = changedInput?.closest('.dashboard-visibility') || document.querySelector('.dashboard-visibility'); if (!group) return;
     const values = { region: group.querySelector('[data-column="REGION NAME"]').checked, area: group.querySelector('[data-column="AREA"]').checked };
     saveJson(VISIBILITY_KEY, values);
-    document.querySelectorAll('.dashboard-visibility').forEach(group => { group.querySelector('[data-column="REGION NAME"]').checked = values.region; group.querySelector('[data-column="AREA"]').checked = values.area; });
+    document.querySelectorAll('.dashboard-visibility').forEach(item => { item.querySelector('[data-column="REGION NAME"]').checked = values.region; item.querySelector('[data-column="AREA"]').checked = values.area; });
   }
 
   function dashboardHeaders(type) {
@@ -254,7 +312,7 @@
     const page = el(pageId); if (!page) return; const table = page.querySelector('table'); const headers = dashboardHeaders(type);
     table.tHead.innerHTML = `<tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr>`; table.tBodies[0].innerHTML = '';
     rows.forEach(row => { const tr=document.createElement('tr'); headers.forEach(h=>{const td=document.createElement('td'); td.textContent = ['S.No','REGION NAME','AREA','Code','Location'].includes(h) ? txt(row[h]) : fmt(row[h]); tr.appendChild(td)}); table.tBodies[0].appendChild(tr); });
-    const total = document.createElement('tr'); total.className='total'; headers.forEach((h,i)=>{const td=document.createElement('td'); if(h==='Location')td.textContent='Grand Total'; else if(!['S.No','REGION NAME','AREA','Code'].includes(h))td.textContent=fmt(rows.reduce((s,r)=>s+num(r[h]),0)); total.appendChild(td)}); table.tBodies[0].appendChild(total);
+    const total = document.createElement('tr'); total.className='total'; headers.forEach(h=>{const td=document.createElement('td'); if(h==='Location')td.textContent='Grand Total'; else if(!['S.No','REGION NAME','AREA','Code'].includes(h))td.textContent=fmt(rows.reduce((s,r)=>s+num(r[h]),0)); total.appendChild(td)}); table.tBodies[0].appendChild(total);
     const sum = rows.reduce((s,r)=>s+num(r.Total),0); const summary=page.querySelector('.dashboard-summary'); summary.innerHTML=`<div class="dynamic-metric"><span>Locations</span><strong>${fmt(rows.length)}</strong></div><div class="dynamic-metric"><span>Grand Total</span><strong>${fmt(sum)}</strong></div>`;
   }
 
@@ -269,8 +327,8 @@
   function styleSheet(headers, rows) {
     const data=[headers,...rows.map(r=>headers.map(h=>r[h]??''))];
     const ws=XLSX.utils.aoa_to_sheet(data); const border={top:{style:'thin',color:{rgb:'FF111827'}},bottom:{style:'thin',color:{rgb:'FF111827'}},left:{style:'thin',color:{rgb:'FF111827'}},right:{style:'thin',color:{rgb:'FF111827'}}};
-    for(let r=0;r<=rows.length;r++)for(let c=0;c<headers.length;c++){const cell=ws[XLSX.utils.encode_cell({r,c})];if(!cell)continue;cell.s={alignment:{horizontal:'center',vertical:'center',wrapText:false},border,font:r===0?{bold:true,color:{rgb:'FFFFFF00'}}:{color:{rgb:'FF000000'}},fill:r===0?{patternType:'solid',fgColor:{rgb:'FF003B66'}}:undefined};if(r>0&&!['S.No','REGION NAME','AREA','Code','Location'].includes(headers[c]))cell.z='#,##,##0.00';}
-    const totalIndex=rows.length+1; XLSX.utils.sheet_add_aoa(ws,[headers.map(h=>h==='Location'?'Grand Total':(!['S.No','REGION NAME','AREA','Code'].includes(h)?rows.reduce((s,row)=>s+num(row[h]),0):''))],{origin:{r:totalIndex,c:0}});
+    for(let r=0;r<=rows.length;r++)for(let c=0;c<headers.length;c++){const cell=ws[XLSX.utils.encode_cell({r,c})];if(!cell)continue;cell.s={alignment:{horizontal:'center',vertical:'center',wrapText:false},border,font:r===0?{bold:true,color:{rgb:'FFFFFF00'}}:{color:{rgb:'FF000000'}},fill:r===0?{patternType:'solid',fgColor:{rgb:'FF003B66'}}:undefined};if(r>0&&!['S.No','REGION NAME','AREA','Code','Location'].includes(headers[c]))cell.z='#,##,##0';}
+    const totalIndex=rows.length+1; XLSX.utils.sheet_add_aoa(ws,[headers.map(h=>h==='Location'?'Grand Total':(!['S.No','REGION NAME','AREA','Code'].includes(h)?rows.reduce((s,row)=>s+Math.round(num(row[h])),0):''))],{origin:{r:totalIndex,c:0}});
     for(let c=0;c<headers.length;c++){const cell=ws[XLSX.utils.encode_cell({r:totalIndex,c})];if(cell)cell.s={font:{bold:true,color:{rgb:'FFFF0000'}},fill:{patternType:'solid',fgColor:{rgb:'FFFFFFFF'}},alignment:{horizontal:'center',vertical:'center'},border};}
     ws['!cols']=headers.map(h=>({wch:h==='Location'?24:h==='REGION NAME'||h==='AREA'?18:Math.max(10,Math.min(20,h.length+2))}));
     return ws;
@@ -285,8 +343,45 @@
     } catch (error) { console.error(error); toast(`Download error: ${error.message||'Unknown error'}`); }
   }
 
-  function onTotalStockLoaded() { promptLocationOrder(false); }
+  function groupStockByPlant(rows, stockField, transitField) {
+    const map = new Map();
+    rows.forEach(row => {
+      const name = txt(row['Plant Name']); if (!name) return;
+      const k = norm(name);
+      if (!map.has(k)) map.set(k, { plantName:name, stock:0, transit:0 });
+      const item = map.get(k); item.stock += num(row[stockField]); item.transit += num(row[transitField]);
+    });
+    return [...map.values()].sort((a,b)=>(b.stock+b.transit)-(a.stock+a.transit));
+  }
 
-  window.InventoryDashboard = { onTotalStockLoaded, build: buildDashboards, snapshot: () => ({ecomRows,completeRows,offlineRows,signatureRows,onlineRows}) };
-  insertUi(); refreshEcomCards(); drawEcomPreview(); buildDashboards();
+  function drawOverviewStockTable(tableId, rows, limitId) {
+    const table = el(tableId); if (!table) return;
+    const limit = Number(el(limitId)?.value || 5);
+    table.tHead.innerHTML = '<tr><th>Plant Name</th><th>Stock (KG)</th><th>Transit (KG)</th></tr>';
+    table.tBodies[0].innerHTML = '';
+    rows.slice(0,limit).forEach(row => {
+      const tr=document.createElement('tr'); [row.plantName,fmt(row.stock),fmt(row.transit)].forEach(value=>{const td=document.createElement('td');td.textContent=value;tr.appendChild(td)}); table.tBodies[0].appendChild(tr);
+    });
+    if (!rows.length) table.tBodies[0].innerHTML='<tr><td colspan="3" class="empty-table-cell">Data available nahi hai.</td></tr>';
+  }
+
+  function refreshOverviewStockTables() {
+    const offline = groupStockByPlant(Array.isArray(totalStockRows)?totalStockRows:[], 'Stock (KG)', 'Transit(KG)');
+    const online = groupStockByPlant(ecomRows, 'Stock (Kg)', 'Transit Stock(Kg)');
+    drawOverviewStockTable('offlineStockOverviewTable', offline, 'offlineStockLimit');
+    drawOverviewStockTable('onlineStockOverviewTable', online, 'onlineStockLimit');
+  }
+
+  function onTotalStockLoaded() {
+    // V3.2: no order popup during upload. Dashboard asks only when opened.
+    buildDashboards(); refreshOverviewStockTables();
+  }
+
+  window.InventoryDashboard = {
+    onTotalStockLoaded,
+    build: buildDashboards,
+    refreshOverview: refreshOverviewStockTables,
+    snapshot: () => ({ecomRows,completeRows,offlineRows,signatureRows,onlineRows})
+  };
+  insertUi(); refreshEcomCards(); drawEcomPreview(); buildDashboards(); refreshOverviewStockTables();
 })();

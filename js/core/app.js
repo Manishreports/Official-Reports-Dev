@@ -9,19 +9,3 @@ function refresh(){let rm=new Map(remarks.map(r=>[K(r),N(r.Remarks)])),seen=new 
 function save(){localStorage.setItem('official_reports_dev_v2',JSON.stringify({manual,remarks,cats,mblocks,setup,planning,raipur,bsto,allowedLocations,spltPlanMap}))}
 function load(){try{let s=JSON.parse(localStorage.getItem('official_reports_dev_v2')||'{}');manual=s.manual||[];remarks=s.remarks||[];cats=s.cats||[];mblocks=s.mblocks||[];setup=s.setup||setup;planning=s.planning||[];raipur=s.raipur||[];bsto=s.bsto||[];allowedLocations=s.allowedLocations||allowedLocations;spltPlanMap=s.spltPlanMap||{}}catch(e){}drawRem();drawEdit('manTable',SC,manual,()=>{drawEdit('manTable',SC,manual,()=>{});refresh();save()});drawEdit('mbTable',['Material','Material Description'],mblocks,()=>{drawEdit('mbTable',['Material','Material Description'],mblocks,()=>{});refresh();save()});drawSetup();drawPlanning();drawRO('rTable',['Plant','Material No.','Description','Qty'],raipur);drawBsto();drawAllowedLocations();drawStockPreview();drawPlanPreview();drawTotalStock();drawPlanHo();drawCore();refreshTotalStockStatus();refresh()}
 load();
-
-// V3.0 preflight: load the Excel engine before the first upload.
-ExcelLibrary.ensure()
-  .then(() => {
-    if (typeof log === 'function') log('Excel engine ready');
-  })
-  .catch(error => {
-    console.error(error);
-    if (typeof log === 'function') log(`Excel engine error: ${error.message}`);
-    const status = document.getElementById('stockStatus');
-    if (status) {
-      status.textContent = 'Excel Engine Offline';
-      status.style.background = '#fee2e2';
-      status.style.color = '#991b1b';
-    }
-  });

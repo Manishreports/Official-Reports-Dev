@@ -202,106 +202,24 @@
   }
 
   function parseLocationOrderText(value, validLocations) {
-  const valid = new Map(
-    validLocations.map(name => [norm(name), name])
-  );
-
-  const next = {};
-  const usedOrders = new Set();
-  const usedLocations = new Set();
-  const errors = [];
-
-  /*
-    IMPORTANT:
-    Raw textarea value use karna hai.
-    txt() / N() yahan use nahi karna, kyunki woh
-    tabs aur line breaks ko collapse kar sakta hai.
-  */
-  const lines = String(value ?? '')
-    .replace(/\u00A0/g, ' ')
-    .split(/\r\n|\n|\r/)
-    .map(line => line.trim())
-    .filter(Boolean);
-
-  lines.forEach((line, index) => {
-    let order = null;
-    let locationName = '';
-
-    /*
-      Supported formats:
-
-      1[TAB]Punjab
-      1  Punjab
-      1 Punjab
-      1, Punjab
-      Punjab[TAB]1
-    */
-
-    let match = line.match(/^(\d+)\s*[\t,;|:-]?\s+(.+)$/);
-
-    if (match) {
-      order = Number(match[1]);
-      locationName = match[2].trim();
-    } else {
-      match = line.match(/^(.+?)\s*[\t,;|:-]?\s+(\d+)$/);
-
-      if (match) {
-        locationName = match[1].trim();
-        order = Number(match[2]);
-      }
-    }
-
-    if (!order || !locationName) {
-      errors.push(
-        `Line ${index + 1}: format galat hai — "${line}"`
-      );
-      return;
-    }
-
-    const locationKey = norm(locationName);
-    const canonicalLocation = valid.get(locationKey);
-
-    if (!canonicalLocation) {
-      errors.push(
-        `Line ${index + 1}: unknown Location "${locationName}"`
-      );
-      return;
-    }
-
-    if (!Number.isInteger(order) || order < 1) {
-      errors.push(
-        `Line ${index + 1}: invalid order "${order}"`
-      );
-      return;
-    }
-
-    if (usedOrders.has(order)) {
-      errors.push(
-        `Line ${index + 1}: order ${order} do baar diya gaya hai`
-      );
-      return;
-    }
-
-    if (usedLocations.has(locationKey)) {
-      errors.push(
-        `Line ${index + 1}: Location "${canonicalLocation}" do baar di gayi hai`
-      );
-      return;
-    }
-
-    usedOrders.add(order);
-    usedLocations.add(locationKey);
-    next[locationKey] = order;
-  });
-
-  validLocations.forEach(name => {
-    if (!next[norm(name)]) {
-      errors.push(`Missing Location: ${name}`);
-    }
-  });
-
-  return { next, errors };
-}
+    const valid = new Map(validLocations.map(name => [norm(name), name]));
+    const next = {};
+    const used = new Set();
+    const errors = [];
+    txt(value).split(/\r?\n/).map(line => line.trim()).filter(Boolean).forEach((line, index) => {
+      const parts = line.split(/\t|,|\s{2,}/).map(item => item.trim()).filter(Boolean);
+      let order, name;
+      if (/^\d+$/.test(parts[0] || '')) { order = Number(parts[0]); name = parts.slice(1).join(' '); }
+      else if (/^\d+$/.test(parts[parts.length - 1] || '')) { order = Number(parts[parts.length - 1]); name = parts.slice(0, -1).join(' '); }
+      else { errors.push(`Line ${index + 1}: order number missing`); return; }
+      const canonical = valid.get(norm(name));
+      if (!canonical) { errors.push(`Line ${index + 1}: unknown Location ${name}`); return; }
+      if (!Number.isInteger(order) || order < 1 || used.has(order)) { errors.push(`Line ${index + 1}: duplicate/invalid order ${order}`); return; }
+      used.add(order); next[norm(canonical)] = order;
+    });
+    validLocations.forEach(name => { if (!next[norm(name)]) errors.push(`Missing Location: ${name}`); });
+    return { next, errors };
+  }
 
   function promptLocationOrder(force = false, onSaved = null) {
     const locations = totalStockLocations();

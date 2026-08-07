@@ -3,8 +3,29 @@ function parseIssueQty(v){if(typeof v==='number')return Number.isFinite(v)?v:0;l
 function buildCore(){let allowed=new Set(allowedLocations.map(NK)),filtered=plan.filter(r=>allowed.has(NK(r.Location))),g=new Map();filtered.forEach(r=>{let s=N(r['STO Number']);if(!s)return;if(!g.has(s))g.set(s,[]);g.get(s).push(r)});let blocked=new Set(bsto.map(N)),p=[];for(let [s,rows] of g){if(rows.length&&rows.every(r=>parseIssueQty(r['Issue Qty'])===0)&&!blocked.has(s))p.push(...rows)}let u=[...new Set(p.map(r=>N(r['STO Number'])))].filter(s=>s&&!mpending.map(N).includes(s));if(u.length)return unknownModal(u,p);continueCore(p)}
 function unknownModal(u,p){$('mTitle').textContent='Pending / Block Decision';$('mBody').innerHTML='';u.forEach(s=>{let d=document.createElement('div');d.className='mrow';d.innerHTML=`<label>${s}</label><select data-sto="${s}"><option>Pending</option><option>Block</option></select>`;$('mBody').appendChild(d)});$('mSave').onclick=()=>{document.querySelectorAll('#mBody select').forEach(s=>{if(s.value==='Block'){if(!bsto.includes(s.dataset.sto))bsto.push(s.dataset.sto)}else if(!mpending.includes(s.dataset.sto))mpending.push(s.dataset.sto)});closeM();drawBsto();save();continueCore(p.filter(r=>!bsto.includes(N(r['STO Number']))))};openM()}
 function continueCore(p){if(raipur.length)raipurModal(p);else finalCore(p,[])}
-function raipurModal(p){$('mTitle').textContent='Raipur Setup';$('mBody').innerHTML='<div class="mrow"><label>Raipur SPlt</label><input id="rsplt" placeholder="Type SPlt"></div><div class="mrow"><label>Raipur Dispatch?</label><select id="rdisp"><option>Yes</option><option>No</option></select></div>';$('mSave').onclick=()=>{let s=N($('rsplt').value),d=$('rdisp').value,e=[];if(d==='No')e=raipur.map(r=>({SPlt:s,Plant:r.Plant,'Plant Name':'',Location:'Raipur','Material No.':r['Material No.'],Description:r.Description,'STO Qty':Q(r.Qty),'STO Number':''}));closeM();finalCore(p,e)};openM()}
-function finalCore(p,e){core=p.map(r=>({SPlt:r.SPlt,Plant:r.Plant,'Plant Name':r['Plant Name'],Location:r.Location,'Material No.':r['Material No.'],Description:r.Description,'STO Qty':Q(r['STO Qty']),'STO Number':r['STO Number']})).concat(e);drawCore();$('coreInfo').textContent=`${core.length.toLocaleString('en-IN')} rows • ${new Set(core.map(r=>N(r['STO Number'])).filter(Boolean)).size.toLocaleString('en-IN')} STO`;refresh();toast('Core Pending ready')}
+function raipurModal(p){
+ $('mTitle').textContent='Raipur Setup';
+ $('mBody').innerHTML='<div class="mrow"><label>Raipur SPlt</label><input id="rsplt" placeholder="Type SPlt"></div><div class="mrow"><label>Raipur Dispatch?</label><select id="rdisp"><option value="">Select</option><option value="Yes">Yes - Ignore Raipur</option><option value="No">No - Include Raipur</option></select></div><div class="notice">Yes = Raipur dispatched, report me include nahi hoga.<br>No = Raipur pending, Core Pending aur Total Stock Plan me include hoga.</div>';
+ $('mSave').onclick=()=>{
+  const s=N($('rsplt').value),d=$('rdisp').value;
+  if(!d)return toast('Raipur Dispatch Yes/No select karein');
+  if(d==='No'&&!s)return toast('Raipur ke liye SPlt enter karein');
+  let e=[];
+  if(d==='No')e=raipur.map(r=>({SPlt:s,Plant:N(r.Plant),'Plant Name':'',Location:N(r.Location)||'MAIN','Material No.':N(r['Material No.']),Description:N(r.Description),'STO Qty':Q(r.Qty),'STO Number':''}));
+  closeM();
+  finalCore(p,e);
+ };
+ openM();
+}
+function finalCore(p,e){
+ const normalRows=p.map(r=>({SPlt:r.SPlt,Plant:r.Plant,'Plant Name':r['Plant Name'],Location:r.Location,'Material No.':r['Material No.'],Description:r.Description,'STO Qty':Q(r['STO Qty']),'STO Number':r['STO Number']}));
+ core=[...e,...normalRows];
+ drawCore();
+ const stoCount=new Set(core.map(r=>N(r['STO Number'])).filter(Boolean)).size;
+ $('coreInfo').textContent=`${core.length.toLocaleString('en-IN')} rows • ${stoCount.toLocaleString('en-IN')} STO • ${e.length.toLocaleString('en-IN')} Raipur rows`;
+ refresh();
+ toast(e.length?`${e.length} Raipur rows included in Core Pending`:'Core Pending ready');
+}
 function drawCore(){drawPrev('coreTable',CC,core,limitValue('coreLimit'))}
 $('coreLimit').onchange=drawCore;
 
